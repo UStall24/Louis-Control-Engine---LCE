@@ -1,0 +1,88 @@
+﻿<Window x:Class="UStallGUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UStallGUI" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" xmlns:view="clr-namespace:UStallGUI.View" d:DataContext="{d:DesignInstance Type=viewmodel:MainWindowViewModel}"
+        mc:Ignorable="d"
+        xmlns:controllerHandler="clr-namespace:UStallGUI.View"
+        Title="MainWindow" Height="650" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <!--<ColumnDefinition Width="200" />-->
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition Height="20" />
+        </Grid.RowDefinitions>
+        <TabControl Grid.Column="0">
+            <TabItem Header="Configuration" IsSelected="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="40" />
+                        <RowDefinition Height="40" />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Label Content="COM Number:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Column="1" Margin="5" Text="{Binding ComValue}" />
+                    <Button Grid.Row="1" Grid.ColumnSpan="2" Content="Connect to Louis Control Engine" VerticalAlignment="Center" Margin="5" Command="{Binding ConnectToLouisControlEngine}" />
+                    <Button Grid.Row="2" Grid.ColumnSpan="2" Content="Disconnect from Louis Control Engine" VerticalAlignment="Center" Margin="5" Command="{Binding DisconnectToLouisControlEngine}" />
+                    <Label Grid.Row="0" Grid.Column="2" Content="Motor H1:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="0" Grid.Column="3" Margin="5" Text="{Binding MotorH1}" />
+                    <Label Grid.Row="1" Grid.Column="2" Content="Motor H2:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="1" Grid.Column="3" Margin="5" Text="{Binding MotorH2}" />
+                    <Label Grid.Row="2" Grid.Column="2" Content="Motor H3:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="2" Grid.Column="3" Margin="5" Text="{Binding MotorH3}" />
+                    <Label Grid.Row="0" Grid.Column="4" Content="Motor V1:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="0" Grid.Column="5" Margin="5" Text="{Binding MotorV1}" />
+                    <Label Grid.Row="1" Grid.Column="4" Content="Motor V2:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="1" Grid.Column="5" Margin="5" Text="{Binding MotorV2}" />
+                    <Label Grid.Row="2" Grid.Column="4" Content="Motor V3:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="2" Grid.Column="5" Margin="5" Text="{Binding MotorV3}" />
+                    <Label Grid.Row="3" Grid.Column="2" Content="All H:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="3" Grid.Column="3" Margin="5" Text="{Binding AllMotorH}" />
+                    <Label Grid.Row="3" Grid.Column="4" Content="All V:" VerticalAlignment="Center" Margin="5" />
+                    <TextBox Grid.Row="3" Grid.Column="5" Margin="5" Text="{Binding AllMotorV}" />
+                    <Label Grid.Row="4" Content="Send Manual set Values:" VerticalContentAlignment="Center" />
+                    <CheckBox Grid.Row="4" Grid.Column="1" IsChecked="{Binding SendManualSetValues}" HorizontalAlignment="Left" VerticalAlignment="Center"></CheckBox>
+                    <Label Grid.Row="4" Grid.Column="2" Content="Send Controller Values:" VerticalContentAlignment="Center" />
+                    <CheckBox Grid.Row="4" Grid.Column="3" IsChecked="{Binding SendControllerValues}" HorizontalAlignment="Left" VerticalAlignment="Center"></CheckBox>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Connection">
+                <controllerHandler:ControllerHandlerView />
+            </TabItem>
+        </TabControl>
+        <GroupBox Grid.Row="1" Grid.Column="1" Header="Console" Margin="5">
+            <TextBlock Text="{Binding ConsoleText}" />
+        </GroupBox>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Label Content="Connection Status to LCE: " FontSize="8" />
+            <Label Grid.Column="1" Content="{Binding ConnectionStatusLCE}" FontSize="8" />
+            <Label Content="Controller Connected: " FontSize="8" Grid.Column="2" />
+            <Label Content="{Binding ConnectionStatusController}" FontSize="8" Grid.Column="3" />
+        </Grid>
+    </Grid>
+</Window>
