@@ -3,10 +3,9 @@ using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using System.Windows.Threading;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
 
@@ -22,18 +21,65 @@ namespace UStallGUI.ViewModel
         private string connectionStatusLCE;
         private string connectionStatusController = "Not Connected";
 
-        private List<string> messages = new List<string>();
-        private SerialPortHelper serialPortHelper;
+        private SerialPortHandler serialPortHelper;
 
         public MainWindowViewModel()
         {
             Instance = this;
             ConnectToLouisControlEngine = new RelayCommand(TaskConnectToLouisControlEngine);
             DisconnectToLouisControlEngine = new RelayCommand(TaskDisconnectToLouisControlEngine);
-            //FindConnectedControllers = new RelayCommand();
-            _UpdateConnectionStatusLCE(0);
+            UpdateConnectionStatusLCE(0);
             manualValueTimer = new Timer(SendManualValues, null, 1000, 100);
         }
+
+        #region Connecting and Disconnecting
+
+        public async void TaskConnectToLouisControlEngine()
+        {
+            TaskDisconnectToLouisControlEngine();
+            serialPortHelper = new SerialPortHandler(comValue);
+            bool wasSuccessful = serialPortHelper.Open();
+            if (wasSuccessful)
+            {
+                wasSuccessful = false;
+                UpdateConnectionStatusLCE(1);
+                serialPortHelper.WriteBytes(0x99, LCECommunicationHelper.GetStartBytes);
+                await Task.Delay(100);
+                foreach (var address in lce_state_messages_addresses)
+                {
+                    byte[] response = serialPortHelper.LookForMessage(address);
+                    if (response.Length != 0)
+                    {
+                        wasSuccessful = true;
+                        UpdateConnectionStatusLCE(2);
+                        ConsoleText = lce_state_messages[response[0]];
+                        break;
+                    }
+                }
+            }
+
+            if (!wasSuccessful)
+            {
+                UpdateConnectionStatusLCE(3);
+                await Task.Delay(3000);
+                UpdateConnectionStatusLCE(0);
+            }
+        }
+
+        public void TaskDisconnectToLouisControlEngine()
+        {
+            if (serialPortHelper != null && serialPortHelper.IsOpen)
+            {
+                bool closingSuccessful = serialPortHelper.Close();
+                UpdateConnectionStatusLCE(closingSuccessful ? 4 : 5);
+            }
+            else
+            {
+                ConsoleText = "Serialport is currently closed";
+            }
+        }
+
+        #endregion Connecting and Disconnecting
 
         private void SendManualValues(object? state)
         {
@@ -45,71 +91,20 @@ namespace UStallGUI.ViewModel
             }
         }
 
-        public void TaskConnectToLouisControlEngine()
+        private readonly string[] lce_connection_messages = { "No active connection", "Connecting...", "Connected", "Error Connecting", "Closing Successful", "Closing Failed" };
+        private readonly byte[] lce_state_messages_addresses = { 0x00, 0x01, 0x02, 0x03 };
+        private readonly string[] lce_state_messages = { "Error", "Motor initialization successful", "Recieving Control Data Successful", "Warning: Cycle Time exceeded!" };
+
+        private int lce_connection_index = 0;
+        private int lce_state_index = 0;
+
+        private void UpdateConnectionStatusLCE(int status)
         {
-            TaskDisconnectToLouisControlEngine();
-            serialPortHelper = new SerialPortHelper(comValue);
-            bool wasSuccessful = serialPortHelper.Open();
-            if (!wasSuccessful)
+            if (status >= 0 && status < lce_connection_messages.Length && status != lce_connection_index)
             {
-                ConsoleText = "Error connecting";
-                return;
-            }
-            ConsoleText = "Connection Buildup Successful";
-            serialPortHelper.serialPort.DataReceived += SerialPort_DataReceived;
-            serialPortHelper.WriteBytes(0x99, LCECommunicationHelper.GetStartBytes);
-            ConsoleText = "LCE Startup Successful";
-        }
-
-        private async void _UpdateConnectionStatusLCE(int status)
-        {
-            switch (status)
-            {
-                case 0:
-                    ConnectionStatusLCE = "No active connection";
-                    break;
-
-                case 1:
-                    ConnectionStatusLCE = "Connecting...";
-                    break;
-
-                case 2:
-                    ConnectionStatusLCE = "Connected";
-                    break;
-
-                case 3:
-                    ConnectionStatusLCE = "Error Connecting";
-                    await Task.Delay(1000);
-                    _UpdateConnectionStatusLCE(0);
-                    break;
-            }
-        }
-
-        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            string message = serialPortHelper.ReadBytesString();
-            ConsoleText = message;
-        }
-
-        public void WriteToLCE(byte[] bytes)
-        {
-            if (SendControllerValues)
-            {
-                serialPortHelper.WriteBytes(0x69, bytes);
-            }
-        }
-
-        public void TaskDisconnectToLouisControlEngine()
-        {
-            if (serialPortHelper != null && serialPortHelper.IsOpen)
-            {
-                bool closingSuccessful = serialPortHelper.Close();
-                serialPortHelper.serialPort.DataReceived -= SerialPort_DataReceived;
-                ConsoleText = closingSuccessful ? "Closing successful" : "Closing failed";
-            }
-            else
-            {
-                ConsoleText = "Serialport is currently closed";
+                lce_connection_index = status;
+                ConnectionStatusLCE = lce_connection_messages[lce_connection_index];
+                ConsoleText = $"LCE Connection Status: {lce_connection_messages[lce_connection_index]}";
             }
         }
 
@@ -195,7 +190,7 @@ namespace UStallGUI.ViewModel
             }
         }
 
-        private int comValue = 6;
+        private int comValue = 15;
 
         public int ComValue
         {

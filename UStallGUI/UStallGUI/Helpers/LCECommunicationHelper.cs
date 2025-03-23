@@ -26,6 +26,23 @@ namespace UStallGUI.Helpers
             return byteArray;
         }
 
+        public static float[] ConvertBytesToMotorValues(byte[] byteArray, bool roundUp = true)
+        {
+            if (byteArray == null)
+            {
+                throw new ArgumentNullException(nameof(byteArray));
+            }
+
+            float[] motorVals = new float[byteArray.Length];
+
+            for (int i = 0; i < byteArray.Length; i++)
+            {
+                motorVals[i] = (float)(Math.Round((byteArray[i] / 127.5f) - 1, 2));
+            }
+
+            return motorVals;
+        }
+
         public static byte[] GetStartBytes => new byte[] { 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
     }
 }

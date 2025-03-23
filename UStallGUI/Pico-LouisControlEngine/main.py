@@ -1,103 +1,130 @@
-from machine import UART, Pin, PWM
 import time
+from customLibs.hardwareHandler import HardwareHandler
+from customLibs.calculator import Calculator
+from customLibs.configLoader import*
 
-motV1_out_pwm = 8
-motV2_out_pwm = 2
-motV3_out_pwm = 4
-motH1_out_pwm = 6
-motH2_out_pwm = 0
-motH3_out_pwm = 10
+verbose = True
 
-motV1_pwm = None
-motV2_pwm = None
-motV3_pwm = None
-motH1_pwm = None
-motH2_pwm = None
-motH3_pwm = None
+direction_values_path = "directionValues.json"
+direction_values = read_json_file(direction_values_path)
 
-maxPWM = 1700
-minPWM = 1300
-deadZoneMin = 1464
-deadZoneMax = 1536
-deadZoneDefault = 1500
+state = 0
+cycle_time = 10  # 50ms loop cycle time
+hardware = HardwareHandler()
+calculator = Calculator(direction_values)
+last_send_address = 0x00
 
-uart = UART(0, baudrate=115200, tx=Pin(12), rx=Pin(13))
+last_execution_time_1000ms = time.ticks_ms()  # Store the last execution time
+last_execution_time_100ms = time.ticks_ms()  # Store the last execution time
 
-motorvalues = [deadZoneDefault] * 6
+led_toggles = 0
 
+def print_verbose(msg):
+    if verbose:
+        print(msg)
 
-def set_motor_speed_all(throttle_values):
-    global motV1_pwm, motV2_pwm, motV3_pwm, motH1_pwm, motH2_pwm, motH3_pwm
-    pwm_values = [0] * len(throttle_values)
-    for i in range(len(throttle_values)):
-        pwm_values[i] = calculate_pwm_value(throttle_values[i])
-        
-    print(pwm_values)
-
-    motV1_pwm.duty_u16(int(pwm_values[0] * 65535 / 20000))
-    motV2_pwm.duty_u16(int(pwm_values[1] * 65535 / 20000))
-    motV3_pwm.duty_u16(int(pwm_values[2] * 65535 / 20000))
-    motH1_pwm.duty_u16(int(pwm_values[3] * 65535 / 20000))
-    motH2_pwm.duty_u16(int(pwm_values[4] * 65535 / 20000))
-    motH3_pwm.duty_u16(int(pwm_values[5] * 65535 / 20000))
-
-def calculate_pwm_value(throttle_value):
-    reverse_range = deadZoneDefault - minPWM
-    forward_range = maxPWM - deadZoneDefault
-    throttle_value = (throttle_value / 127.5) - 1
+def task_one_herz(): # Execution every second
+    global state, led_toggles
+    if state == 0:  # Waiting init State
+        led_toggles += 4
+    elif state == 1:  # Execute mode State
+        led_toggles += 2
+    elif state == 2:  # Error mode State
+        led_toggles += 6
     
-    if throttle_value <= 0:
-        pwmVal = deadZoneDefault + throttle_value * reverse_range
+def task_ten_herz(): # Execution every 100ms
+    global led_toggles
+    if led_toggles > 0:
+        hardware.led.value(1 - hardware.led.value())  # Toggle LED
+        led_toggles -= 1  # Decrement the toggle count
     else:
-        pwmVal = deadZoneDefault + throttle_value * forward_range
-    
-    if deadZoneMin < pwmVal < deadZoneMax:
-        pwmVal = deadZoneDefault
-    return pwmVal
-   
-    
-def init_motor_all():
-    global motV1_pwm, motV2_pwm, motV3_pwm, motH1_pwm, motH2_pwm, motH3_pwm
-    motV1_pwm = PWM(Pin(motV1_out_pwm))
-    motV2_pwm = PWM(Pin(motV2_out_pwm))
-    motV3_pwm = PWM(Pin(motV3_out_pwm))
-    motH1_pwm = PWM(Pin(motH1_out_pwm))
-    motH2_pwm = PWM(Pin(motH2_out_pwm))
-    motH3_pwm = PWM(Pin(motH3_out_pwm))
-    
-    motV1_pwm.freq(50)
-    motV2_pwm.freq(50)
-    motV3_pwm.freq(50)
-    motH1_pwm.freq(50)
-    motH2_pwm.freq(50)
-    motH3_pwm.freq(50)
-    
-    set_motor_speed_all([0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F])
+        hardware.led.value(0)  # Turn off the LED
+        
+def apply_pwm_raw(data):
+    motor_values = list(data[1:7])
+    pwm_values = calculator.calc_all_motor_pwm(motor_Values, True)
+    #print_verbose(pwm_values)
+    hardware.set_motor_speed_all(pwm_values)
+    hardware.send_message_code_uart(0x02)
 
-print("Prog started")
-motors_init = False
+def apply_controller_values(data):
+    controller_values = list(data[1:8])
+    throttle_value = calculator.calc_throttle_value2(controller_values)
+    #print_verbose("Throttle value:", throttle_value)
+    pwm_values = calculator.calc_all_motor_pwm(throttle_value, False)
+    #print_verbose("PWM value:", pwm_values)
+    hardware.set_motor_speed_all(pwm_values)
+
+def print_as_hex(byte_array):
+    msg = "Received data (hex):" + " ".join(f"{byte:02X}" for byte in byte_array)
+    print_verbose(msg)
+
+
+print_verbose("Program started. Waiting for initialization...")
 
 while True:
-    try:       
-        if uart.any():  
-            data = uart.read()  
+    start_time = time.ticks_ms()
+
+    # Run periodic task every 1000ms (1 second)
+    if time.ticks_diff(start_time, last_execution_time_1000ms) >= 1000:
+        task_one_herz()
+        last_execution_time_1000ms = start_time  # Reset timer
+    if time.ticks_diff(start_time, last_execution_time_100ms) >= 100:
+        task_ten_herz()
+        last_execution_time_100ms = start_time  # Reset timer
+
+    try:
+        if hardware.uart.any():
+            data = hardware.uart.read()
             if data:
-                print("Received data (hex):", " ".join(f"{byte:02X}" for byte in data))
-                if motors_init and len(data) == 7:
-                    if data[0] == 0x69:
-                        motor_values = [byte for byte in data[1:7]]
-                        set_motor_speed_all(motor_values)
-            
-                if not motors_init:
-                    if data == bytes([0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]):
-                        init_motor_all()
-                        motors_init = True
-                        print("Motors initialized")
-                        uart.write(b"init motors success")
+                print_as_hex(data)
+                
+                if data == bytes([0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF]):
+                    hardware.init_motor_all()
+                    print_verbose("Motors initialized")
+                    hardware.send_message_code_uart(0x01)
+                    state = 1
+                
+                if hardware.mot_pwms[0] != None:
+                    if len(data) == 7 and data[0] == 0x69:
+                        apply_pwm_raw(data)
+                    elif len(data) == 8 and data[0] == 0x96:
+                        apply_controller_values(data)
+                
+                if data[0] == 0x10:
+                    print_verbose("Sending direction values")
+                    payload = get_direction_uart_values_payload(calculator.direction_values)
+                    
+                    for motor_values in payload:
+                        print_verbose(f"Sending: {motor_values}")  # Debugging print
+                        hardware.uart.write(bytes(motor_values))
+                        time.sleep(0.02)
+    
+                if data[0] == 0x21:
+                    if len(data) == 7 * 6:
+                        new_direction_values_matrix = []
+                        for i in range(6):
+                            # Append the slice of data from index i*7 + 1 to i*7 + 7
+                            new_direction_values_matrix.append(data[i * 7 + 1:i * 7 + 7])
+                            new_direction_values_matrix[i] = [calculator.byte_to_float(value) for value in new_direction_values_matrix[i]]
 
+                        update_direction_values(calculator.direction_values, new_direction_values_matrix)
+                        print(calculator.direction_values)
+                        write_json_file(direction_values_path, calculator.direction_values)
+                        hardware.send_message_code_uart(0x20)
+
+    
     except Exception as e:
-        print(f"Error: {e}")
-    time.sleep(0.1)
-
-print("Prog finished")
+        print_verbose(f"[ERROR] {e.__class__.__name__}: {e}")
+        state = 2
+        hardware.send_message_code_uart(0x00)
+    
+    
+    delta_time = time.ticks_diff(time.ticks_ms(), start_time)
+    if delta_time < cycle_time:
+        time.sleep_ms(cycle_time - delta_time)
+#        print_verbose(cycle_time - delta_time)
+    else:
+        print_verbose(f"Warning: Cycle Time exceeded! - delay {-cycle_time + delta_time}ms")
+        hardware.send_message_code_uart(0x03)
 

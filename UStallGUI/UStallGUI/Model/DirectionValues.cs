@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GalaSoft.MvvmLight;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -51,64 +52,33 @@ namespace UStallGUI.Model
         Rotation
     }
 
-    public class MotorValues
+    public class MotorValues : ObservableObject
     {
-        public float VM1 { get; set; }
-        public float VM2 { get; set; }
-        public float VM3 { get; set; }
-        public float HM1 { get; set; }
-        public float HM2 { get; set; }
-        public float HM3 { get; set; }
+        private float[] _values = new float[6];
 
-        public MotorValues()
-        { }
+        public float VM1 { get => _values[0]; set => _values[0] = ClipValue(value); }
+        public float VM2 { get => _values[1]; set => _values[1] = ClipValue(value); }
+        public float VM3 { get => _values[2]; set => _values[2] = ClipValue(value); }
+        public float HM1 { get => _values[3]; set => _values[3] = ClipValue(value); }
+        public float HM2 { get => _values[4]; set => _values[4] = ClipValue(value); }
+        public float HM3 { get => _values[5]; set => _values[5] = ClipValue(value); }
 
-        public MotorValues(float[] array)
-        {
-            UpdateAsArray(array);
-        }
+        private static float ClipValue(float value) => Math.Clamp(value, -1f, 1f);
 
-        public float[] GetAsArray()
-        {
-            float[] array = { VM1, VM2, VM3, HM1, HM2, HM3 };
-            return array;
-        }
+        public MotorValues(float[] array) => UpdateAsArray(array);
+
+        public float[] GetAsArray() => (float[])_values.Clone();
 
         public void UpdateAsArray(float[] array)
         {
-            VM1 = array[0];
-            VM2 = array[1];
-            VM3 = array[2];
-            HM1 = array[3];
-            HM2 = array[4];
-            HM3 = array[5];
+            if(array != null) Array.Copy(array, _values, Math.Min(array.Length, _values.Length));
         }
 
-        public void SwitchMotors(int m1, int m2)
-        {
-            float[] array = GetAsArray();
-            float temp = array[m1 - 1];
-            array[m1 - 1] = array[m2 - 1];
-            array[m2 - 1] = temp;
-            UpdateAsArray(array);
-        }
+        public void SwitchMotors(int m1, int m2) => (_values[m1 - 1], _values[m2 - 1]) = (_values[m2 - 1], _values[m1 - 1]);
 
-        public static MotorValues GetDefaultMotorValues()
-        {
-            var motorValues = new MotorValues();
-            motorValues.VM1 = 0;
-            motorValues.VM2 = 0;
-            motorValues.VM3 = 0;
-            motorValues.HM1 = 0;
-            motorValues.HM2 = 0;
-            motorValues.HM3 = 0;
-            return motorValues;
-        }
+        public static MotorValues GetDefaultMotorValues() => new MotorValues(new float[] { 0.7f, 0.5f, 0.3f, -0.3f, -0.5f, -0.7f });
 
-        public override string ToString()
-        {
-            return $"VM1: {VM1}, VM2: {VM2}, VM3: {VM3}, HM1: {HM1}, HM2: {HM2}, HM3: {HM3}";
-        }
+        public override string ToString() => $"VM1: {VM1}, VM2: {VM2}, VM3: {VM3}, HM1: {HM1}, HM2: {HM2}, HM3: {HM3}";
     }
 
     public class AxisValues

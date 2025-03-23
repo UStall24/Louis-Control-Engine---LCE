@@ -3,26 +3,25 @@ using GalaSoft.MvvmLight.Command;
 using SharpDX.XInput;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using UStallGUI.Helpers;
+using System.ComponentModel;
+using System.Threading.Tasks;
 using UStallGUI.Model;
 
 namespace UStallGUI.ViewModel
 {
     public class ControllerHandlerViewModel : ObservableObject
     {
-        private Controller controller;
-        private readonly int pollingIntervalsms = 10;
-        private Timer controllerTimer;
+        private readonly int pollingFrequency = 200;
+        private readonly int sendingDividor = 10;
+        private bool keepPolling = false;
 
         // Properties for binding
-        public ControllerToPwmModel ControllerModel { get; set; }
+        public ControllerModel CurrentControllerModel { get; set; }
 
         private string connectedControllersText = "None";
 
         public ControllerHandlerViewModel()
         {
-            ControllerModel = new ControllerToPwmModel(ConfigLoader.LoadControllerParameters());
             ScanForControllers = new RelayCommand(ScanConnectedControllers); // Default to controller index 0
             ConnectToController = new RelayCommand(() => SetController(0)); // Default to controller index 0
         }
@@ -31,7 +30,6 @@ namespace UStallGUI.ViewModel
         {
             List<string> connectedControllers = new List<string>();
 
-            // Check all possible controller indices (0 to 3)
             for (int i = 0; i < 4; i++)
             {
                 var controller = new Controller((UserIndex)i);
@@ -41,55 +39,58 @@ namespace UStallGUI.ViewModel
                     var capabilities = controller.GetCapabilities(DeviceQueryType.Gamepad);
                     string controllerType = capabilities.SubType.ToString(); // e.g., Gamepad, Wheel, etc.
 
-                    // Add the controller name with its index and type
                     connectedControllers.Add($"Controller {i + 1} ({controllerType})");
                 }
             }
 
-            // Update the ConnectedControllers property
-            if (connectedControllers.Count > 0)
-            {
-                ConnectedControllers = string.Join(", ", connectedControllers); // Display connected controllers
-            }
-            else
-            {
-                ConnectedControllers = "None"; // No controllers connected
-            }
+            if (connectedControllers.Count > 0) ConnectedControllers = string.Join(", ", connectedControllers);
+            else ConnectedControllers = "None";
+
             MainWindowViewModel.Instance.ConsoleText = "Scanning connected Controllers complete";
         }
 
         private void SetController(int index)
         {
-            controller = new Controller((UserIndex)index);
-            if (controllerTimer != null)
-            {
-                controllerTimer.Dispose();
-            }
-            controllerTimer = new Timer(ControllerTimerCallback, null, 1000, pollingIntervalsms);
+            Controller controller = new Controller((UserIndex)index);
+            CurrentControllerModel = new ControllerModel(controller);
+
+            // Run the polling task in the background
+            _ = Task.Run(ControllerTimerCallback);
+
+
             MainWindowViewModel.Instance.ConsoleText = "Controller with Index 0 is connected";
             MainWindowViewModel.Instance.ConnectionStatusController = "Connected";
         }
 
-        private void ControllerTimerCallback(object state)
+        private async Task ControllerTimerCallback()
         {
-            if (controller != null)
+            keepPolling = true;
+            int delayMs = (pollingFrequency > 0) ? (1000 / pollingFrequency) : 10; // Avoid division by zero
+            int dividorCounter = 0;
+            try
             {
-                try
+                while (keepPolling)
                 {
-                    State controllerState = controller.GetState();
-                    ControllerModel.UpdateControllerValues(controllerState);
-                    float[] motorValues = ControllerModel.CalculateMotorValues();
-                    MainWindowViewModel.Instance.WriteToLCE(LCECommunicationHelper.ConvertMotorValuesToBytes(motorValues));
-                    Console.WriteLine(new MotorValues(motorValues));
-                }
-                catch (Exception e)
-                {
-                    MainWindowViewModel.Instance.ConsoleText = "Controller disconnected";
-                    MainWindowViewModel.Instance.ConnectionStatusController = "Not connected";
-                    controller = null;
+                    CurrentControllerModel.UpdateControllerValues();
+                    if (dividorCounter == 0)
+                    {
+                        if (MainWindowViewModel.Instance.SendControllerValues) SerialPortHandler.Instance?.WriteBytes(0x96, CurrentControllerModel.GetMovementBytes());
+                        Console.WriteLine(CurrentControllerModel.GetMovementBytesAsString());
+                        dividorCounter = sendingDividor;
+                    }
+                    else dividorCounter--;
+
+
+                    RaisePropertyChanged(nameof(CurrentControllerModel));
+                    await Task.Delay(delayMs);
                 }
             }
+            catch (Exception ex)
+            {
+                MainWindowViewModel.Instance.ConsoleText = $"Controller Exception: {ex}";
+            }
         }
+
 
         public string ConnectedControllers
         {

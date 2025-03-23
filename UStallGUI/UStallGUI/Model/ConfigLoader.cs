@@ -6,15 +6,15 @@ namespace UStallGUI.Model
 {
     public class ConfigLoader
     {
-        private static string currentControllerParametersFilepath = "directionValues.json";
+        public readonly static string currentControllerParametersFilepath = "directionValues.json";
 
-        public static DirectionValues LoadControllerParameters()
+        public static DirectionValues LoadControllerParameters(string path)
         {
-            EnsureConfigFileExists();
+            //EnsureConfigFileExists();
             DirectionValues loadedValues = null;
             try
             {
-                var json = File.ReadAllText(currentControllerParametersFilepath);
+                var json = File.ReadAllText(path);
                 var config = JsonConvert.DeserializeObject<DirectionValues>(json);
                 loadedValues = config;
             }
@@ -22,17 +22,20 @@ namespace UStallGUI.Model
             return loadedValues;
         }
 
-        public static void UpdateConfigurationFile(DirectionValues newConfig)
+        public static bool UpdateConfigurationFile(DirectionValues newConfig, string path)
         {
+            bool successful = false;
             try
             {
                 string json = JsonConvert.SerializeObject(newConfig, Formatting.Indented);
-                File.WriteAllText(currentControllerParametersFilepath, json);
+                File.WriteAllText(path, json);
+                successful = true;
             }
             catch (Exception) { }
+            return successful;
         }
 
-        private static bool EnsureConfigFileExists()
+        public static bool EnsureConfigFileExists()
         {
             if (!File.Exists(currentControllerParametersFilepath))
             {

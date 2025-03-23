@@ -6,8 +6,13 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
 	<TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>
+	<LangVersion>preview</LangVersion>
 	  
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="ROV_Model.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
@@ -20,6 +25,12 @@
     <PackageReference Include="SharpDX.DirectInput" Version="4.2.0" />
     <PackageReference Include="SharpDX.XInput" Version="4.2.0" />
     <PackageReference Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="ROV_Model.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 
