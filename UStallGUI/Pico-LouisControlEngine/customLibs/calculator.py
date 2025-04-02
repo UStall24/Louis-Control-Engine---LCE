@@ -1,4 +1,18 @@
+from customLibs.gyroscopeMPU6050 import gyroscope
+from math import atan2, sqrt
+
 class Calculator:
+    
+    def double_to_byte(self, value):
+        # je int 0.01
+        value = value * 100
+        return value
+    
+    def byte_to_double(self, value):
+        # je int 0.01
+        value = value / 100
+        return value
+    
     def __init__(self, direction_values):
         # Motor PWM limits
         self.maxPWM = 1700
@@ -9,6 +23,52 @@ class Calculator:
         
         self.direction_values = direction_values
         
+        self.gyro = gyroscope()
+        
+        # PD Controller Gains
+        self.Kp = 0.05    # Proportional gain
+        self.Kd = 0.018    # Derivative gain
+        
+        # Angle tracking with complementary filter
+        self.filtered_angle_x = 0  # Roll
+        self.filtered_angle_y = 0  # Pitch
+        self.alpha = 0.98          # Filter coefficient
+        self.dt = 0.02             # 50Hz update rate
+        
+        # Dead zone settings (in radians - 5° ≈ 0.087 rad)
+        self.ANGLE_DEADZONE = 0.175  # 5 degrees in radians
+        self.GYRO_RATE_DEADZONE = 3.5  # °/s (complementary to angle deadzone)
+        
+    def update_pd_controller(self, gyro_x, gyro_y, accel_x, accel_y, accel_z):
+       # Calculate angles from accelerometer (radians)
+       accel_angle_x = atan2(accel_y, sqrt(accel_x**2 + accel_z**2))
+       accel_angle_y = atan2(accel_x, sqrt(accel_y**2 + accel_z**2))
+            # Update complementary filter
+       self.filtered_angle_x = self.alpha * (self.filtered_angle_x + gyro_x * self.dt) + (1-self.alpha) * accel_angle_x
+       self.filtered_angle_y = self.alpha * (self.filtered_angle_y + gyro_y * self.dt) + (1-self.alpha) * accel_angle_y
+           # Apply dead zones
+       if abs(self.filtered_angle_x) < self.ANGLE_DEADZONE and abs(gyro_x) < self.GYRO_RATE_DEADZONE:
+          self.filtered_angle_x = 0  # Reset if within dead zone
+          gyro_x = 0
+       if abs(self.filtered_angle_y) < self.ANGLE_DEADZONE and abs(gyro_y) < self.GYRO_RATE_DEADZONE:
+          self.filtered_angle_y = 0
+          gyro_y = 0
+          # Only apply corrections outside dead zone
+       if abs(self.filtered_angle_x) > self.ANGLE_DEADZONE or abs(gyro_x) > self.GYRO_RATE_DEADZONE:
+          correction_x = -self.Kp * self.filtered_angle_x - self.Kd * gyro_x
+       else:
+          correction_x = 0
+       if abs(self.filtered_angle_y) > self.ANGLE_DEADZONE or abs(gyro_y) > self.GYRO_RATE_DEADZONE:
+          correction_y = -self.Kp * self.filtered_angle_y - self.Kd * gyro_y
+       else:
+           correction_y = 0
+       return [
+           correction_y * 0.866 - correction_x * 0.5,
+           #-correction_y * 0.866 - correction_x * 0.5,
+           - correction_x * 0.5,
+           correction_y * 0.866 + correction_x * 0.5
+       ]
+    
     def byte_to_float(self, value):
         return (value / 127.5) - 1
 
@@ -55,6 +115,7 @@ class Calculator:
                             right_joystick_x, right_joystick_y,
                             l1_trigger, r1_trigger, l2_trigger, r2_trigger):
         """Calculates motor values based on joystick and trigger inputs."""
+        
         # ["Translation"]
         vmotor1 = (self.direction_values["Translation"]["Z_Axis"]["VM1"] * left_joystick_y + self.direction_values["Translation"]["X_Axis"]["VM1"] * left_joystick_x - self.direction_values["Translation"]["Y_Axis"]["VM1"] * l2_trigger + self.direction_values["Translation"]["Y_Axis"]["VM1"] * r2_trigger)
         vmotor2 = (self.direction_values["Translation"]["Z_Axis"]["VM2"] * left_joystick_y + self.direction_values["Translation"]["X_Axis"]["VM2"] * left_joystick_x - self.direction_values["Translation"]["Y_Axis"]["VM2"] * l2_trigger + self.direction_values["Translation"]["Y_Axis"]["VM2"] * r2_trigger)
@@ -71,6 +132,17 @@ class Calculator:
         hmotor2 += (self.direction_values["Rotation"]["Z_Axis"]["HM2"] * right_joystick_y + self.direction_values["Rotation"]["X_Axis"]["HM2"] * right_joystick_x -  self.direction_values["Rotation"]["Y_Axis"]["HM2"] * (1 if l1_trigger else 0) +  self.direction_values["Rotation"]["Y_Axis"]["HM2"] * (1 if r1_trigger else 0))
         hmotor3 += (self.direction_values["Rotation"]["Z_Axis"]["HM3"] * right_joystick_y + self.direction_values["Rotation"]["X_Axis"]["HM3"] * right_joystick_x -  self.direction_values["Rotation"]["Y_Axis"]["HM3"] * (1 if l1_trigger else 0) +  self.direction_values["Rotation"]["Y_Axis"]["HM3"] * (1 if r1_trigger else 0))
         
+        # Get sensor data
+        data = self.gyro.getData()
+        gyro_x, gyro_y = data[0], data[1]          # Roll, Pitch rates
+        accel_x, accel_y, accel_z = data[3], data[4], data[5]  # Accelerometer
+        
+        # Apply stabilization
+        corrections = self.update_pd_controller(gyro_x, gyro_y, accel_x, accel_y, accel_z)
+        vmotor1 += corrections[0]
+        vmotor2 += corrections[1]
+        vmotor3 += corrections[2]
+         
         # Capping values between -1 and 1
         vmotor1, vmotor2, vmotor3 = map(lambda v: max(-1, min(1, v)), [vmotor1, vmotor2, vmotor3])
         hmotor1, hmotor2, hmotor3 = map(lambda v: max(-1, min(1, v)), [hmotor1, hmotor2, hmotor3])

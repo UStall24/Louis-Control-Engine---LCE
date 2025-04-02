@@ -5,7 +5,7 @@ import asyncio
 class HardwareHandler:
     def __init__(self):
         # Motor setup
-        self.mot_pwm_pins = [0, 2, 4, 6, 8, 10]
+        self.mot_pwm_pins = [8, 2, 4, 6, 0, 10]
         self.mot_pwms = [None] * len(self.mot_pwm_pins)
         
         # UART setup
@@ -16,12 +16,6 @@ class HardwareHandler:
         
         self.last_message_sent = None
 
-    def init_motor_all(self):
-        """Initialize all motors."""
-        for i in range(len(self.mot_pwm_pins)):
-            self.mot_pwms[i] = PWM(Pin(self.mot_pwm_pins[i]))
-            self.mot_pwms[i].freq(50)
-
     def set_motor_speed_all(self, pwm_values):
         """Set speed for all motors based on throttle input."""
         for i in range(len(self.mot_pwms)):
@@ -31,6 +25,13 @@ class HardwareHandler:
         if self.last_message_sent is not message_code:
             self.uart.write(bytes([message_code] * 7))
             last_message_sent = message_code
+            
+    def init_motor_all(self):
+        """Initialize all motors."""
+        for i in range(len(self.mot_pwm_pins)):
+            self.mot_pwms[i] = PWM(Pin(self.mot_pwm_pins[i]))
+            self.mot_pwms[i].freq(50)
+        self.set_motor_speed_all([1500]*6)
 
 
 

@@ -2,6 +2,8 @@ import time
 from customLibs.hardwareHandler import HardwareHandler
 from customLibs.calculator import Calculator
 from customLibs.configLoader import*
+from customLibs.gyroscopeMPU6050 import gyroscope
+from math import atan2, sqrt
 
 verbose = True
 
@@ -9,7 +11,7 @@ direction_values_path = "directionValues.json"
 direction_values = read_json_file(direction_values_path)
 
 state = 0
-cycle_time = 10  # 50ms loop cycle time
+cycle_time = 20  # 50ms loop cycle time
 hardware = HardwareHandler()
 calculator = Calculator(direction_values)
 last_send_address = 0x00
@@ -43,7 +45,7 @@ def task_ten_herz(): # Execution every 100ms
 def apply_pwm_raw(data):
     motor_values = list(data[1:7])
     pwm_values = calculator.calc_all_motor_pwm(motor_Values, True)
-    #print_verbose(pwm_values)
+    print_verbose(pwm_values)
     hardware.set_motor_speed_all(pwm_values)
     hardware.send_message_code_uart(0x02)
 
@@ -72,7 +74,7 @@ while True:
     if time.ticks_diff(start_time, last_execution_time_100ms) >= 100:
         task_ten_herz()
         last_execution_time_100ms = start_time  # Reset timer
-
+    
     try:
         if hardware.uart.any():
             data = hardware.uart.read()
@@ -99,6 +101,11 @@ while True:
                         print_verbose(f"Sending: {motor_values}")  # Debugging print
                         hardware.uart.write(bytes(motor_values))
                         time.sleep(0.02)
+                        
+                if data[0] == 0x30:
+                    print_verbose("Send PID values")
+                    payload = bytes([0x31, calculator.Kp, calculator.Kd])
+                    hardware.uart.write(payload)
     
                 if data[0] == 0x21:
                     if len(data) == 7 * 6:
@@ -127,4 +134,6 @@ while True:
     else:
         print_verbose(f"Warning: Cycle Time exceeded! - delay {-cycle_time + delta_time}ms")
         hardware.send_message_code_uart(0x03)
-
+    
+    
+    
