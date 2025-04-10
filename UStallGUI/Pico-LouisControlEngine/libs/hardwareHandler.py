@@ -32,6 +32,14 @@ class HardwareHandler:
             self.mot_pwms[i] = PWM(Pin(self.mot_pwm_pins[i]))
             self.mot_pwms[i].freq(50)
         self.set_motor_speed_all([1500]*6)
+        
+    def write_to_frontend(self, byte_array):
+        # Pad the byte_array with 0x00 until its length is 7
+        while len(byte_array) < 7:
+            byte_array.append(0x00)
+        payload = bytes(byte_array)
+        self.uart.write(payload)
+        
 
 
 

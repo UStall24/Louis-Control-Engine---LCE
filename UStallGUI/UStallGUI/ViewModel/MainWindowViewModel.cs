@@ -2,8 +2,6 @@
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.Generic;
-using System.IO.Ports;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UStallGUI.Helpers;
@@ -26,60 +24,9 @@ namespace UStallGUI.ViewModel
         public MainWindowViewModel()
         {
             Instance = this;
-            ConnectToLouisControlEngine = new RelayCommand(TaskConnectToLouisControlEngine);
-            DisconnectToLouisControlEngine = new RelayCommand(TaskDisconnectToLouisControlEngine);
             UpdateConnectionStatusLCE(0);
             manualValueTimer = new Timer(SendManualValues, null, 1000, 100);
         }
-
-        #region Connecting and Disconnecting
-
-        public async void TaskConnectToLouisControlEngine()
-        {
-            TaskDisconnectToLouisControlEngine();
-            serialPortHelper = new SerialPortHandler(comValue);
-            bool wasSuccessful = serialPortHelper.Open();
-            if (wasSuccessful)
-            {
-                wasSuccessful = false;
-                UpdateConnectionStatusLCE(1);
-                serialPortHelper.WriteBytes(0x99, LCECommunicationHelper.GetStartBytes);
-                await Task.Delay(100);
-                foreach (var address in lce_state_messages_addresses)
-                {
-                    byte[] response = serialPortHelper.LookForMessage(address);
-                    if (response.Length != 0)
-                    {
-                        wasSuccessful = true;
-                        UpdateConnectionStatusLCE(2);
-                        ConsoleText = lce_state_messages[response[0]];
-                        break;
-                    }
-                }
-            }
-
-            if (!wasSuccessful)
-            {
-                UpdateConnectionStatusLCE(3);
-                await Task.Delay(3000);
-                UpdateConnectionStatusLCE(0);
-            }
-        }
-
-        public void TaskDisconnectToLouisControlEngine()
-        {
-            if (serialPortHelper != null && serialPortHelper.IsOpen)
-            {
-                bool closingSuccessful = serialPortHelper.Close();
-                UpdateConnectionStatusLCE(closingSuccessful ? 4 : 5);
-            }
-            else
-            {
-                ConsoleText = "Serialport is currently closed";
-            }
-        }
-
-        #endregion Connecting and Disconnecting
 
         private void SendManualValues(object? state)
         {
@@ -92,13 +39,10 @@ namespace UStallGUI.ViewModel
         }
 
         private readonly string[] lce_connection_messages = { "No active connection", "Connecting...", "Connected", "Error Connecting", "Closing Successful", "Closing Failed" };
-        private readonly byte[] lce_state_messages_addresses = { 0x00, 0x01, 0x02, 0x03 };
-        private readonly string[] lce_state_messages = { "Error", "Motor initialization successful", "Recieving Control Data Successful", "Warning: Cycle Time exceeded!" };
 
         private int lce_connection_index = 0;
-        private int lce_state_index = 0;
 
-        private void UpdateConnectionStatusLCE(int status)
+        public void UpdateConnectionStatusLCE(int status)
         {
             if (status >= 0 && status < lce_connection_messages.Length && status != lce_connection_index)
             {

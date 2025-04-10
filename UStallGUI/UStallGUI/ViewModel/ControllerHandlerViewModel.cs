@@ -3,14 +3,16 @@ using GalaSoft.MvvmLight.Command;
 using SharpDX.XInput;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Threading.Tasks;
+using UStallGUI.Helpers;
 using UStallGUI.Model;
 
 namespace UStallGUI.ViewModel
 {
     public class ControllerHandlerViewModel : ObservableObject
     {
+        public static bool sendControllerValues = false;
+
         private readonly int pollingFrequency = 200;
         private readonly int sendingDividor = 10;
         private bool keepPolling = false;
@@ -57,7 +59,6 @@ namespace UStallGUI.ViewModel
             // Run the polling task in the background
             _ = Task.Run(ControllerTimerCallback);
 
-
             MainWindowViewModel.Instance.ConsoleText = "Controller with Index 0 is connected";
             MainWindowViewModel.Instance.ConnectionStatusController = "Connected";
         }
@@ -74,12 +75,11 @@ namespace UStallGUI.ViewModel
                     CurrentControllerModel.UpdateControllerValues();
                     if (dividorCounter == 0)
                     {
-                        if (MainWindowViewModel.Instance.SendControllerValues) SerialPortHandler.Instance?.WriteBytes(0x96, CurrentControllerModel.GetMovementBytes());
-                        Console.WriteLine(CurrentControllerModel.GetMovementBytesAsString());
+                        if (sendControllerValues) SerialPortHandler.Instance?.WriteBytes(LCE_CommandAddresses.ApplyControllerValues, CurrentControllerModel.GetMovementBytes());
+                        Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
                         dividorCounter = sendingDividor;
                     }
                     else dividorCounter--;
-
 
                     RaisePropertyChanged(nameof(CurrentControllerModel));
                     await Task.Delay(delayMs);
@@ -90,7 +90,6 @@ namespace UStallGUI.ViewModel
                 MainWindowViewModel.Instance.ConsoleText = $"Controller Exception: {ex}";
             }
         }
-
 
         public string ConnectedControllers
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Ports;
 using System.Linq;
 using System.Threading.Tasks;
+using UStallGUI.Helpers;
 using UStallGUI.ViewModel;
 
 namespace UStallGUI.Model
@@ -62,16 +63,23 @@ namespace UStallGUI.Model
             return successful;
         }
 
-        public void WriteBytes(byte adressByte, byte[] data)
+        public void WriteBytes(LCE_CommandAddresses addressByte, byte[] data = null) => WriteBytes((byte)addressByte, data);
+
+        public void WriteBytes(byte addressByte, byte[] data = null)
         {
+            data ??= new byte[] { };
+
             if (serialPort.IsOpen)
             {
                 byte[] dataToSend = new byte[data.Length + 1];
-                dataToSend[0] = adressByte;
+                dataToSend[0] = addressByte;
                 Array.Copy(data, 0, dataToSend, 1, data.Length);
                 serialPort.Write(dataToSend, 0, dataToSend.Length);
             }
-            else MainWindowViewModel.Instance.ConsoleText = "Serial Port is not open. Cant write";
+            else
+            {
+                MainWindowViewModel.Instance.ConsoleText = "Serial Port is not open. Can't write.";
+            }
         }
 
         public byte[] ReadBytes()
@@ -108,6 +116,8 @@ namespace UStallGUI.Model
 
             // If there are remaining bytes in the buffer that are less than 7, they will be retained
         }
+
+        public byte[] LookForMessage(LCE_ResponseAddresses addressByte) => LookForMessage((byte)addressByte);
 
         public byte[] LookForMessage(byte addressByte)
         {

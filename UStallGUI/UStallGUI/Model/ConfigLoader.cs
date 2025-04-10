@@ -6,23 +6,43 @@ namespace UStallGUI.Model
 {
     public class ConfigLoader
     {
-        public readonly static string currentControllerParametersFilepath = "directionValues.json";
+        public static readonly string currentConfigGuiFilePath = "configGUI.json";
 
-        public static DirectionValues LoadControllerParameters(string path)
+        public static DirectionValues LoadControllerParameters(string path) => LoadOrCreateConfig<DirectionValues>(path);
+
+        public static bool UpdateConfigurationFile(DirectionValues newConfig, string path) => UpdateConfigurationFile<DirectionValues>(newConfig, path);
+
+        public static ConfigGUI LoadConfigGUI() => LoadOrCreateConfig<ConfigGUI>(currentConfigGuiFilePath);
+
+        public static bool UpdateConfigGUI(ConfigGUI newConfig) => UpdateConfigurationFile<ConfigGUI>(newConfig, currentConfigGuiFilePath);
+
+        public static T LoadOrCreateConfig<T>(string path) where T : class, new()
         {
-            //EnsureConfigFileExists();
-            DirectionValues loadedValues = null;
+            // Ensure the config file exists, creating it with default values if necessary
+            if (!File.Exists(path))
+            {
+                var defaultConfig = new T(); // Create a new instance of T using the parameterless constructor
+                string json = JsonConvert.SerializeObject(defaultConfig, Formatting.Indented);
+                File.WriteAllText(path, json);
+            }
+
+            // Load the configuration from the file
+            T loadedValues = null;
             try
             {
                 var json = File.ReadAllText(path);
-                var config = JsonConvert.DeserializeObject<DirectionValues>(json);
-                loadedValues = config;
+                loadedValues = JsonConvert.DeserializeObject<T>(json);
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                // Optionally log the exception or handle it as needed
+                Console.WriteLine($"Error loading config: {ex.Message}");
+            }
+
             return loadedValues;
         }
 
-        public static bool UpdateConfigurationFile(DirectionValues newConfig, string path)
+        public static bool UpdateConfigurationFile<T>(T newConfig, string path) where T : class
         {
             bool successful = false;
             try
@@ -31,20 +51,12 @@ namespace UStallGUI.Model
                 File.WriteAllText(path, json);
                 successful = true;
             }
-            catch (Exception) { }
-            return successful;
-        }
-
-        public static bool EnsureConfigFileExists()
-        {
-            if (!File.Exists(currentControllerParametersFilepath))
+            catch (Exception ex)
             {
-                var defaultConfig = DirectionValues.GetDefaultDirectionValues(); // assuming this is the default constructor
-                string json = JsonConvert.SerializeObject(defaultConfig, Formatting.Indented);
-                File.WriteAllText(currentControllerParametersFilepath, json);
-                return false; // file was created
+                // Optionally log the exception or handle it as needed
+                Console.WriteLine($"Error updating config file: {ex.Message}");
             }
-            return true; // file already existed
+            return successful;
         }
     }
 }

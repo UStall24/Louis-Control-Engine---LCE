@@ -1,19 +1,8 @@
-from customLibs.gyroscopeMPU6050 import gyroscope
+from libs.gyroscopeMPU6050 import gyroscope
 from math import atan2, sqrt
 
 class Calculator:
-    
-    def double_to_byte(self, value):
-        # je int 0.01
-        value = value * 100
-        return value
-    
-    def byte_to_double(self, value):
-        # je int 0.01
-        value = value / 100
-        return value
-    
-    def __init__(self, direction_values):
+    def __init__(self, direction_values, gyro=None):
         # Motor PWM limits
         self.maxPWM = 1700
         self.minPWM = 1300
@@ -23,8 +12,8 @@ class Calculator:
         
         self.direction_values = direction_values
         
-        self.gyro = gyroscope()
-        
+        self.gyro = gyro
+        self.gyro_enabled = False
         # PD Controller Gains
         self.Kp = 0.05    # Proportional gain
         self.Kd = 0.018    # Derivative gain
@@ -38,7 +27,7 @@ class Calculator:
         # Dead zone settings (in radians - 5° ≈ 0.087 rad)
         self.ANGLE_DEADZONE = 0.175  # 5 degrees in radians
         self.GYRO_RATE_DEADZONE = 3.5  # °/s (complementary to angle deadzone)
-        
+            
     def update_pd_controller(self, gyro_x, gyro_y, accel_x, accel_y, accel_z):
        # Calculate angles from accelerometer (radians)
        accel_angle_x = atan2(accel_y, sqrt(accel_x**2 + accel_z**2))
@@ -132,16 +121,17 @@ class Calculator:
         hmotor2 += (self.direction_values["Rotation"]["Z_Axis"]["HM2"] * right_joystick_y + self.direction_values["Rotation"]["X_Axis"]["HM2"] * right_joystick_x -  self.direction_values["Rotation"]["Y_Axis"]["HM2"] * (1 if l1_trigger else 0) +  self.direction_values["Rotation"]["Y_Axis"]["HM2"] * (1 if r1_trigger else 0))
         hmotor3 += (self.direction_values["Rotation"]["Z_Axis"]["HM3"] * right_joystick_y + self.direction_values["Rotation"]["X_Axis"]["HM3"] * right_joystick_x -  self.direction_values["Rotation"]["Y_Axis"]["HM3"] * (1 if l1_trigger else 0) +  self.direction_values["Rotation"]["Y_Axis"]["HM3"] * (1 if r1_trigger else 0))
         
-        # Get sensor data
-        data = self.gyro.getData()
-        gyro_x, gyro_y = data[0], data[1]          # Roll, Pitch rates
-        accel_x, accel_y, accel_z = data[3], data[4], data[5]  # Accelerometer
-        
-        # Apply stabilization
-        corrections = self.update_pd_controller(gyro_x, gyro_y, accel_x, accel_y, accel_z)
-        vmotor1 += corrections[0]
-        vmotor2 += corrections[1]
-        vmotor3 += corrections[2]
+        if self.gyro != None and gyro_enabled:
+            # Get sensor data
+            data = self.gyro.getData()
+            gyro_x, gyro_y = data[0], data[1]          # Roll, Pitch rates
+            accel_x, accel_y, accel_z = data[3], data[4], data[5]  # Accelerometer
+            
+            # Apply stabilization
+            corrections = self.update_pd_controller(gyro_x, gyro_y, accel_x, accel_y, accel_z)
+            vmotor1 += corrections[0]
+            vmotor2 += corrections[1]
+            vmotor3 += corrections[2]
          
         # Capping values between -1 and 1
         vmotor1, vmotor2, vmotor3 = map(lambda v: max(-1, min(1, v)), [vmotor1, vmotor2, vmotor3])
