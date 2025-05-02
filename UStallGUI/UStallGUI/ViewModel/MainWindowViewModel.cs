@@ -30,13 +30,21 @@ namespace UStallGUI.ViewModel
 
         private void SendManualValues(object? state)
         {
+            Console.WriteLine($"[Timer] SendManualValues() aufgerufen. SendManualSetValues = {SendManualSetValues}");
+
             if (SendManualSetValues)
             {
-                byte[] motorValuesBytes = LCECommunicationHelper.ConvertMotorValuesToBytes(GetManualMotorValues);
+                var motorValues = GetManualMotorValues;
+                Console.WriteLine($"[Timer] Manuelle Werte: {string.Join(", ", motorValues)}");
 
-                serialPortHelper.WriteBytes(0x69, motorValuesBytes);
+                byte[] motorValuesBytes = LCECommunicationHelper.ConvertMotorValuesToBytes(motorValues);
+
+                Console.WriteLine($"[Timer] Bytes zum Senden: {BitConverter.ToString(motorValuesBytes)}");
+
+                serialPortHelper?.WriteBytes(0x69, motorValuesBytes);
             }
         }
+
 
         private readonly string[] lce_connection_messages = { "No active connection", "Connecting...", "Connected", "Error Connecting", "Closing Successful", "Closing Failed" };
 
@@ -52,10 +60,18 @@ namespace UStallGUI.ViewModel
             }
         }
 
-        private float[] GetManualMotorValues
+        public SetupHandlerViewModel SetupVM { get; } = new();
+
+        private float[] GetManualMotorValues => new float[]
         {
-            get => new float[] { MotorV1, MotorV2, MotorV3, MotorH1, MotorH2, MotorH3 };
-        }
+            SetupVM.ManualControlValues.VM1,
+            SetupVM.ManualControlValues.VM2,
+            SetupVM.ManualControlValues.VM3,
+            SetupVM.ManualControlValues.HM1,
+            SetupVM.ManualControlValues.HM2,
+            SetupVM.ManualControlValues.HM3
+        };
+
 
         private float _motorV1 = 0;
         private float _motorV2 = 0;

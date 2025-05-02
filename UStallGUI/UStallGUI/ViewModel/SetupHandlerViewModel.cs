@@ -45,6 +45,10 @@ namespace UStallGUI.ViewModel
             {
                 Set(ref _controlType, value);
                 ControllerHandlerViewModel.sendControllerValues = _controlType == 2;
+                if (MainWindowViewModel.Instance != null)
+                {
+                    MainWindowViewModel.Instance.SendManualSetValues = _controlType == 1;
+                }
             }
         }
 
@@ -57,6 +61,48 @@ namespace UStallGUI.ViewModel
         #endregion LCE Setup
 
         #region Manual Control
+
+        private float _vm1;
+        public float VM1
+        {
+            get => _vm1;
+            set => Set(ref _vm1, value);
+        }
+
+        private float _vm2;
+        public float VM2
+        {
+            get => _vm2;
+            set => Set(ref _vm2, value);
+        }
+
+        private float _vm3;
+        public float VM3
+        {
+            get => _vm3;
+            set => Set(ref _vm3, value);
+        }
+
+        private float _hm1;
+        public float HM1
+        {
+            get => _hm1;
+            set => Set(ref _hm1, value);
+        }
+
+        private float _hm2;
+        public float HM2
+        {
+            get => _hm2;
+            set => Set(ref _hm2, value);
+        }
+
+        private float _hm3;
+        public float HM3
+        {
+            get => _hm3;
+            set => Set(ref _hm3, value);
+        }
 
         private MotorValues _manualControlValues;
 
