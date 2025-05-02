@@ -30,16 +30,16 @@ namespace UStallGUI.ViewModel
 
         private void SendManualValues(object? state)
         {
-            Console.WriteLine($"[Timer] SendManualValues() aufgerufen. SendManualSetValues = {SendManualSetValues}");
+            //Console.WriteLine($"[Timer] SendManualValues() aufgerufen. SendManualSetValues = {SendManualSetValues}");
 
             if (SendManualSetValues)
             {
                 var motorValues = GetManualMotorValues;
-                Console.WriteLine($"[Timer] Manuelle Werte: {string.Join(", ", motorValues)}");
+                //Console.WriteLine($"[Timer] Manuelle Werte: {string.Join(", ", motorValues)}");
 
                 byte[] motorValuesBytes = LCECommunicationHelper.ConvertMotorValuesToBytes(motorValues);
 
-                Console.WriteLine($"[Timer] Bytes zum Senden: {BitConverter.ToString(motorValuesBytes)}");
+                //Console.WriteLine($"[Timer] Bytes zum Senden: {BitConverter.ToString(motorValuesBytes)}");
 
                 serialPortHelper?.WriteBytes(0x69, motorValuesBytes);
             }
