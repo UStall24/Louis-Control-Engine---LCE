@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -71,7 +72,17 @@ namespace UStallGUI.Model
 
         public void UpdateAsArray(float[] array)
         {
-            if(array != null) Array.Copy(array, _values, Math.Min(array.Length, _values.Length));
+            if (array != null) Array.Copy(array, _values, Math.Min(array.Length, _values.Length));
+        }
+
+        public byte[] GetAsByte()
+        {
+            byte[] payload = new byte[6];
+            for (int i = 0; i < 6; i++)
+            {
+                payload[i] = (byte)(_values[i] * 127.5 + 127.5);
+            }
+            return payload;
         }
 
         public void SwitchMotors(int m1, int m2) => (_values[m1 - 1], _values[m2 - 1]) = (_values[m2 - 1], _values[m1 - 1]);

@@ -35,7 +35,7 @@ def task_ten_herz(): # Execution every 100ms
 def apply_manual_control(data):
     if hardware.mot_pwms[0] != None:
         motor_values = list(data[1:7])
-        pwm_values = calculator.calc_all_motor_pwm(motor_Values, True)
+        pwm_values = calculator.calc_all_motor_pwm(motor_values, True)
         print_verbose(pwm_values)
         hardware.set_motor_speed_all(pwm_values)
         hardware.send_message_code_uart(0x02)
