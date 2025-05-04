@@ -275,13 +275,13 @@ namespace UStallGUI.ViewModel
         {
         }
 
-        private void InitManualControl()
-        {
-            _manualControlTimer = new Timer(UpdateInterval * 2); // interval in milliseconds (e.g., 1000ms = 1s)
-            _manualControlTimer.Elapsed += ApplyManualControl;
-            _manualControlTimer.AutoReset = true; // repeat every interval
-            _manualControlTimer.Enabled = true;
-        }
+        //private void InitManualControl()
+        //{
+        //    _manualControlTimer = new Timer(UpdateInterval * 2); // interval in milliseconds (e.g., 1000ms = 1s)
+        //    _manualControlTimer.Elapsed += ApplyManualControl;
+        //    _manualControlTimer.AutoReset = true; // repeat every interval
+        //    _manualControlTimer.Enabled = true;
+        //}
 
         private void ApplyManualControl(object sender, ElapsedEventArgs e)
         {
