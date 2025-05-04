@@ -40,3 +40,4 @@ These micropython scripts run on the RaspberryPI Pico on the upper box to contro
 ## Changelog
 
 - **17 April 2025**: Initial version of the document.
+- **02 Mai 2025**: Fixed bug with applying manual values.

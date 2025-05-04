@@ -1,7 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Timers;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
 
@@ -30,7 +32,7 @@ namespace UStallGUI.ViewModel
 
         private byte _updateInterval;
 
-        public byte UpdateInterval
+        public byte UpdateInterval // in ms
         {
             get => _updateInterval;
             set => Set(ref _updateInterval, value);
@@ -45,10 +47,6 @@ namespace UStallGUI.ViewModel
             {
                 Set(ref _controlType, value);
                 ControllerHandlerViewModel.sendControllerValues = _controlType == 2;
-                if (MainWindowViewModel.Instance != null)
-                {
-                    MainWindowViewModel.Instance.SendManualSetValues = _controlType == 1;
-                }
             }
         }
 
@@ -163,16 +161,14 @@ namespace UStallGUI.ViewModel
 
         public bool GyroEnabled
         {
-            get
-            {
-                _gyroEnabled = currentConfig.GyroEnabled;
-                return _gyroEnabled;
-            }
+            get => _gyroEnabled;
             set
             {
-                Set(ref _gyroEnabled, value);
-                currentConfig.GyroEnabled = _gyroEnabled;
-                UpdateConfig();
+                if (Set(ref _gyroEnabled, value))
+                {
+                    currentConfig.GyroEnabled = value;
+                    UpdateConfig();
+                }
             }
         }
 
@@ -193,7 +189,7 @@ namespace UStallGUI.ViewModel
         }
 
         // Method to clamp the value between 0 and 2.55
-        private float Clamp255Float(float value)
+        private static float Clamp255Float(float value)
         {
             if (value < 0)
                 return 0;
@@ -279,6 +275,19 @@ namespace UStallGUI.ViewModel
         {
         }
 
+        private void InitManualControl()
+        {
+            _manualControlTimer = new Timer(UpdateInterval * 2); // interval in milliseconds (e.g., 1000ms = 1s)
+            _manualControlTimer.Elapsed += ApplyManualControl;
+            _manualControlTimer.AutoReset = true; // repeat every interval
+            _manualControlTimer.Enabled = true;
+        }
+
+        private void ApplyManualControl(object sender, ElapsedEventArgs e)
+        {
+            sp.WriteBytes(LCE_CommandAddresses.ApplyManualControl, ManualControlValues.GetAsByte());
+        }
+
         private async void ApplyUpdateInterval()
         {
             byte oldCycleInterval = await PullUpdateInterval();
@@ -329,7 +338,7 @@ namespace UStallGUI.ViewModel
                 {
                     GyroPValue = LCECommunicationHelper.ConvertByteTo255Float(response[0]);
                     GyroDValue = LCECommunicationHelper.ConvertByteTo255Float(response[1]);
-                    GyroEnabled = response[2] == 0x01;
+                    GyroEnabled = (response[2] == 1);
                     MainWindowViewModel.Instance.ConsoleText = "Pulling PID values was Successful!";
                 }
                 else MainWindowViewModel.Instance.ConsoleText = "Pulling PID values failed!";
