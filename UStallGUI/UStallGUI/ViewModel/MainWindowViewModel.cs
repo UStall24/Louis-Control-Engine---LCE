@@ -1,9 +1,6 @@
-﻿using GalaSoft.MvvmLight;
+﻿using System.Threading;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
 
@@ -14,8 +11,6 @@ namespace UStallGUI.ViewModel
         public static MainWindowViewModel Instance;
 
         private readonly Timer manualValueTimer;
-
-        private string consoleText = "";
         private string connectionStatusLCE;
         private string connectionStatusController = "Not Connected";
 
@@ -56,7 +51,7 @@ namespace UStallGUI.ViewModel
             {
                 lce_connection_index = status;
                 ConnectionStatusLCE = lce_connection_messages[lce_connection_index];
-                ConsoleText = $"LCE Connection Status: {lce_connection_messages[lce_connection_index]}";
+                ControlBoxConsoleText = $"LCE Connection Status: {lce_connection_messages[lce_connection_index]}";
             }
         }
 
@@ -158,37 +153,31 @@ namespace UStallGUI.ViewModel
             set => Set(ref comValue, value);
         }
 
-        private readonly Queue<string> consoleHistory = new Queue<string>(10); // Queue to store the last 10 values
+        private readonly ConsoleLog controlBoxLog = new();
+        private readonly ConsoleLog accessoryBoxLog = new();
 
-        private int counter = 1; // Counter to track the number of values
-
-        public string ConsoleText
+        private string controlBoxConsoleText;
+        public string ControlBoxConsoleText
         {
-            get => consoleText;
+            get => controlBoxConsoleText;
             set
             {
-                // Prepend the counter to the new value
-                string newValue = $"[{counter}] - {value}";
-
-                // Add the new value to the queue
-                consoleHistory.Enqueue(newValue);
-
-                // Ensure the queue never exceeds 10 items
-                if (consoleHistory.Count > 10)
-                {
-                    consoleHistory.Dequeue(); // Remove the oldest value
-                }
-
-                // Join the values in the queue to form the console text
-                var newConsoleText = string.Join(Environment.NewLine, consoleHistory);
-
-                // Update the property
-                Set(ref consoleText, newConsoleText);
-
-                // Increment the counter
-                counter++;
+                controlBoxLog.Add(value);
+                Set(ref controlBoxConsoleText, controlBoxLog.CurrentText);
             }
         }
+
+        private string accessoryBoxConsoleText;
+        public string AccessoryBoxConsoleText
+        {
+            get => accessoryBoxConsoleText;
+            set
+            {
+                accessoryBoxLog.Add(value);
+                Set(ref accessoryBoxConsoleText, accessoryBoxLog.CurrentText);
+            }
+        }
+
 
         // Textfield for the Statusbar Bindings
         public string ConnectionStatusLCE

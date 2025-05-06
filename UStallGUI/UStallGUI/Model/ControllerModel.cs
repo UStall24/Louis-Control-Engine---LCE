@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using System;
+using GalaSoft.MvvmLight;
 using SharpDX.XInput;
 
 namespace UStallGUI.Model
@@ -36,6 +37,19 @@ namespace UStallGUI.Model
         public bool ButtonStart { get; set; } = false;
         public bool ButtonBack { get; set; } = false;
 
+        // Positive Flank Callbacks
+        public event Action DPadUpPressed, DPadDownPressed, DPadLeftPressed, DPadRightPressed;
+        public event Action ButtonAPressed, ButtonBPressed, ButtonXPressed, ButtonYPressed;
+        public event Action ButtonStartPressed, ButtonBackPressed;
+        public event Action LeftJoystickDownPressed, RightJoystickDownPressed;
+
+        private bool prevDPadUp, prevDPadDown, prevDPadLeft, prevDPadRight;
+        private bool prevButtonA, prevButtonB, prevButtonX, prevButtonY;
+        private bool prevButtonStart, prevButtonBack;
+        private bool prevLeftJoystickDown, prevRightJoystickDown;
+
+
+
         public void UpdateControllerValues()
         {
             if(controller != null)
@@ -52,24 +66,53 @@ namespace UStallGUI.Model
                 L1Trigger = (controllerState.Gamepad.Buttons & GamepadButtonFlags.LeftShoulder) != 0;
                 R1Trigger = (controllerState.Gamepad.Buttons & GamepadButtonFlags.RightShoulder) != 0;
 
-                // Free Variables
-                // Update D-Pad values
-                DPadUp = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadUp) != 0;
-                DPadDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadDown) != 0;
-                DPadLeft = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadLeft) != 0;
-                DPadRight = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadRight) != 0;
+                // D-Pad
+                bool currentDPadUp = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadUp) != 0;
+                bool currentDPadDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadDown) != 0;
+                bool currentDPadLeft = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadLeft) != 0;
+                bool currentDPadRight = (controllerState.Gamepad.Buttons & GamepadButtonFlags.DPadRight) != 0;
 
-                // Update button values
-                ButtonA = (controllerState.Gamepad.Buttons & GamepadButtonFlags.A) != 0;
-                ButtonB = (controllerState.Gamepad.Buttons & GamepadButtonFlags.B) != 0;
-                ButtonX = (controllerState.Gamepad.Buttons & GamepadButtonFlags.X) != 0;
-                ButtonY = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Y) != 0;
+                if (!prevDPadUp && currentDPadUp) DPadUpPressed?.Invoke();
+                if (!prevDPadDown && currentDPadDown) DPadDownPressed?.Invoke();
+                if (!prevDPadLeft && currentDPadLeft) DPadLeftPressed?.Invoke();
+                if (!prevDPadRight && currentDPadRight) DPadRightPressed?.Invoke();
 
-                // Update Start and Back buttons
-                ButtonStart = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Start) != 0;
-                ButtonBack = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Back) != 0;
-                LeftJoystickDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.LeftThumb) != 0;
-                RightJoystickDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.RightThumb) != 0;
+                prevDPadUp = DPadUp = currentDPadUp;
+                prevDPadDown = DPadDown = currentDPadDown;
+                prevDPadLeft = DPadLeft = currentDPadLeft;
+                prevDPadRight = DPadRight = currentDPadRight;
+
+                // Buttons A/B/X/Y
+                bool currentA = (controllerState.Gamepad.Buttons & GamepadButtonFlags.A) != 0;
+                bool currentB = (controllerState.Gamepad.Buttons & GamepadButtonFlags.B) != 0;
+                bool currentX = (controllerState.Gamepad.Buttons & GamepadButtonFlags.X) != 0;
+                bool currentY = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Y) != 0;
+
+                if (!prevButtonA && currentA) ButtonAPressed?.Invoke();
+                if (!prevButtonB && currentB) ButtonBPressed?.Invoke();
+                if (!prevButtonX && currentX) ButtonXPressed?.Invoke();
+                if (!prevButtonY && currentY) ButtonYPressed?.Invoke();
+
+                prevButtonA = ButtonA = currentA;
+                prevButtonB = ButtonB = currentB;
+                prevButtonX = ButtonX = currentX;
+                prevButtonY = ButtonY = currentY;
+
+                // Start / Back / Joystick Press
+                bool currentStart = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Start) != 0;
+                bool currentBack = (controllerState.Gamepad.Buttons & GamepadButtonFlags.Back) != 0;
+                bool currentLeftJoyDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.LeftThumb) != 0;
+                bool currentRightJoyDown = (controllerState.Gamepad.Buttons & GamepadButtonFlags.RightThumb) != 0;
+
+                if (!prevButtonStart && currentStart) ButtonStartPressed?.Invoke();
+                if (!prevButtonBack && currentBack) ButtonBackPressed?.Invoke();
+                if (!prevLeftJoystickDown && currentLeftJoyDown) LeftJoystickDownPressed?.Invoke();
+                if (!prevRightJoystickDown && currentRightJoyDown) RightJoystickDownPressed?.Invoke();
+
+                prevButtonStart = ButtonStart = currentStart;
+                prevButtonBack = ButtonBack = currentBack;
+                prevLeftJoystickDown = LeftJoystickDown = currentLeftJoyDown;
+                prevRightJoystickDown = RightJoystickDown = currentRightJoyDown;
             }
         }
 
