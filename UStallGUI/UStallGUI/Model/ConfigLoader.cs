@@ -6,6 +6,7 @@ namespace UStallGUI.Model
 {
     public class ConfigLoader
     {
+        public static ConfigGUI CurrentConfig { get; set; }
         public static readonly string currentConfigGuiFilePath = "configGUI.json";
 
         public static DirectionValues LoadControllerParameters(string path) => LoadOrCreateConfig<DirectionValues>(path);
@@ -15,6 +16,7 @@ namespace UStallGUI.Model
         public static ConfigGUI LoadConfigGUI() => LoadOrCreateConfig<ConfigGUI>(currentConfigGuiFilePath);
 
         public static bool UpdateConfigGUI(ConfigGUI newConfig) => UpdateConfigurationFile<ConfigGUI>(newConfig, currentConfigGuiFilePath);
+        public static bool UpdateConfigGUI() => UpdateConfigurationFile<ConfigGUI>(CurrentConfig, currentConfigGuiFilePath);
 
         public static T LoadOrCreateConfig<T>(string path) where T : class, new()
         {

@@ -78,7 +78,7 @@ namespace UStallGUI.Model
             }
             else
             {
-                MainWindowViewModel.Instance.ConsoleText = "Serial Port is not open. Can't write.";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = "Serial Port is not open. Can't write.";
             }
         }
 

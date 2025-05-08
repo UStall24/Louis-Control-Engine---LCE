@@ -11,6 +11,8 @@ namespace UStallGUI.ViewModel
 {
     public class ControllerHandlerViewModel : ObservableObject
     {
+        public static ControllerHandlerViewModel Instance;
+
         public static bool sendControllerValues = false;
 
         private readonly int pollingFrequency = 200;
@@ -24,6 +26,7 @@ namespace UStallGUI.ViewModel
 
         public ControllerHandlerViewModel()
         {
+            Instance = this;
             ScanForControllers = new RelayCommand(ScanConnectedControllers); // Default to controller index 0
             ConnectToController = new RelayCommand(() => SetController(0)); // Default to controller index 0
         }
@@ -48,7 +51,7 @@ namespace UStallGUI.ViewModel
             if (connectedControllers.Count > 0) ConnectedControllers = string.Join(", ", connectedControllers);
             else ConnectedControllers = "None";
 
-            MainWindowViewModel.Instance.ConsoleText = "Scanning connected Controllers complete";
+            MainWindowViewModel.Instance.ControlBoxConsoleText = "Scanning connected Controllers complete";
         }
 
         private void SetController(int index)
@@ -59,7 +62,7 @@ namespace UStallGUI.ViewModel
             // Run the polling task in the background
             _ = Task.Run(ControllerTimerCallback);
 
-            MainWindowViewModel.Instance.ConsoleText = "Controller with Index 0 is connected";
+            MainWindowViewModel.Instance.ControlBoxConsoleText = "Controller with Index 0 is connected";
             MainWindowViewModel.Instance.ConnectionStatusController = "Connected";
         }
 
@@ -87,7 +90,7 @@ namespace UStallGUI.ViewModel
             }
             catch (Exception ex)
             {
-                MainWindowViewModel.Instance.ConsoleText = $"Controller Exception: {ex}";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = $"Controller Exception: {ex}";
             }
         }
 
