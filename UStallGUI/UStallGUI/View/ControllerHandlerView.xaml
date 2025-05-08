@@ -11,6 +11,9 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
@@ -18,18 +21,22 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Label Content="Setup Controller" HorizontalAlignment="Center" FontWeight="Bold" Grid.Column="0" Grid.Row="0" />
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="1" Grid.RowSpan="3">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
-                    <Button Grid.Column="0" Content="Scan for Controllers" VerticalAlignment="Center" Margin="5" Command="{Binding ScanForControllers}" />
-                    <Button Grid.Column="1" Content="Connect to Controller" VerticalAlignment="Center" Margin="5" Command="{Binding ConnectToController}" />
-                    <TextBox Text="{Binding ConnectedControllers, Mode=OneWay}" Grid.Row="1" Margin="5" IsReadOnly="True" />
+                    <Label Grid.Column="0" Grid.Row="0" Content="Control Style:" />
+                    <ComboBox Grid.Column="1" Margin="5" SelectedIndex="{Binding CurrentControllerModel.ControlStyle}">
+                        <ComboBoxItem Content="Style 1" IsSelected="True" />
+                        <ComboBoxItem Content="Style 2" />
+                    </ComboBox>
+                    <Button Grid.Row="1" Grid.Column="0" Content="Connect to Controller" VerticalAlignment="Center" Margin="5" Command="{Binding ConnectToController}" />
                 </Grid>
                 <Label Content="Input Values" HorizontalAlignment="Center" FontWeight="Bold" Grid.Column="1" Grid.Row="0" />
                 <Grid Grid.Column="1" Grid.Row="1">
