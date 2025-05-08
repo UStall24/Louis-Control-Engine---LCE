@@ -58,7 +58,7 @@ namespace UStallGUI.ViewModel
 
                     default:
                         ControllerHandlerViewModel.sendControllerValues = false;
-                        _manualControlTimer.Stop();
+                        _manualControlTimer?.Stop();
                         break;
                 }
             }
