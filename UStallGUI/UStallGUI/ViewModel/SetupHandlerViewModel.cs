@@ -211,7 +211,7 @@ namespace UStallGUI.ViewModel
                 if (response.Length != 0)
                 {
                     MainWindowViewModel.Instance.UpdateConnectionStatusLCE(2);
-                    MainWindowViewModel.Instance.ConsoleText = LCECommunicationHelper.LCE_MessageAddresses[response[0]];
+                    MainWindowViewModel.Instance.ControlBoxConsoleText = LCECommunicationHelper.LCE_MessageAddresses[response[0]];
                     UpdateInterval = await PullUpdateInterval();
                 }
                 else
@@ -236,7 +236,7 @@ namespace UStallGUI.ViewModel
             }
             else
             {
-                MainWindowViewModel.Instance.ConsoleText = "Serialport is currently closed";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = "Serialport is currently closed";
             }
         }
 
@@ -269,7 +269,7 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.UpdateCylceTime, [UpdateInterval]);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.UpdateCycleTime_Response);
-                if (response.Length > 0) MainWindowViewModel.Instance.ConsoleText = $"Updating Cycle Time from {oldCycleInterval} to {response[0]} {(oldCycleInterval == response[0] ? "Failed!" : "was Successful!")}";
+                if (response.Length > 0) MainWindowViewModel.Instance.ControlBoxConsoleText = $"Updating Cycle Time from {oldCycleInterval} to {response[0]} {(oldCycleInterval == response[0] ? "Failed!" : "was Successful!")}";
             }
         }
 
@@ -296,7 +296,7 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.ResetError);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.ResetError_Response);
-                if (response.Length != 0 && response[0] == 0x01) MainWindowViewModel.Instance.ConsoleText = "Resetting Error was successful";
+                if (response.Length != 0 && response[0] == 0x01) MainWindowViewModel.Instance.ControlBoxConsoleText = "Resetting Error was successful";
             }
         }
 
@@ -312,9 +312,9 @@ namespace UStallGUI.ViewModel
                     GyroPValue = LCECommunicationHelper.ConvertByteTo255Float(response[0]);
                     GyroDValue = LCECommunicationHelper.ConvertByteTo255Float(response[1]);
                     GyroEnabled = (response[2] == 1);
-                    MainWindowViewModel.Instance.ConsoleText = "Pulling PID values was Successful!";
+                    MainWindowViewModel.Instance.ControlBoxConsoleText = "Pulling PID values was Successful!";
                 }
-                else MainWindowViewModel.Instance.ConsoleText = "Pulling PID values failed!";
+                else MainWindowViewModel.Instance.ControlBoxConsoleText = "Pulling PID values failed!";
             }
         }
 
@@ -327,8 +327,8 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.ApplyPidValues, payload);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.ApplyPidValues_Response);
-                if (response.Length > 0) MainWindowViewModel.Instance.ConsoleText = "Applying PID values was Successful!";
-                else MainWindowViewModel.Instance.ConsoleText = "Applying PID values failed!";
+                if (response.Length > 0) MainWindowViewModel.Instance.ControlBoxConsoleText = "Applying PID values was Successful!";
+                else MainWindowViewModel.Instance.ControlBoxConsoleText = "Applying PID values failed!";
             }
         }
 
