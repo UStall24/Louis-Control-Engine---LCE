@@ -20,7 +20,22 @@ namespace UStallGUI.Model
         // Variables to avoid excess declaring
         private State controllerState;
 
-        public int ControlStyle { get; set; } = 0;
+        private int _controlStyle = 0;
+
+        public int ControlStyle
+        {
+            get
+            {
+                _controlStyle = ConfigLoader.CurrentConfig.ControlStyle;
+                return _controlStyle;
+            }
+            set
+            {
+                Set(ref _controlStyle, value);
+                ConfigLoader.CurrentConfig.ControlStyle = _controlStyle;
+                ConfigLoader.UpdateConfigGUI();
+            }
+        }
 
         // ControlStyle 2 Variables
         public byte AltRightJoystickX { get; set; } = 127;
