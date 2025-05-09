@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UStallGUI" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" xmlns:view="clr-namespace:UStallGUI.View" d:DataContext="{d:DesignInstance Type=viewmodel:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="850" Width="800">
+        Title="MainWindow" Height="850" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition />
+            <ColumnDefinition Width="400" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition Height="200" />
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
-        <TabControl Grid.Column="0" Grid.ColumnSpan="2">
+        <view:CameraStreamView />
+        <TabControl Grid.Column="1">
             <TabItem Header="Setup" IsSelected="True">
                 <view:SetupHandlerView />
             </TabItem>
