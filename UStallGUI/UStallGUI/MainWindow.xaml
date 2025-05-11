@@ -5,18 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UStallGUI" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" xmlns:view="clr-namespace:UStallGUI.View" d:DataContext="{d:DesignInstance Type=viewmodel:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="850" Width="800">
+        Title="MainWindow" Height="850" Width="1200">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <!--<ColumnDefinition Width="200" />-->
+            <ColumnDefinition Width="400" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
             <RowDefinition Height="200" />
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
-        <TabControl Grid.Column="0">
+        <view:CameraStreamView />
+        <TabControl Grid.Column="1">
             <TabItem Header="Setup" IsSelected="True">
                 <view:SetupHandlerView />
             </TabItem>
@@ -26,9 +27,15 @@
             <TabItem Header="Control Parameter">
                 <view:ControlParameterHandlerView />
             </TabItem>
+            <TabItem Header="Accessory Box Setup">
+                <view:AccessoryBoxSetupView />
+            </TabItem>
         </TabControl>
-        <GroupBox Grid.Row="1" Grid.Column="1" Header="Console" Margin="5">
-            <TextBlock Text="{Binding ConsoleText}" />
+        <GroupBox Grid.Row="1" Grid.Column="0" Header="Control Box Console" Margin="5">
+            <TextBlock Text="{Binding ControlBoxConsoleText}" />
+        </GroupBox>
+        <GroupBox Grid.Row="1" Grid.Column="1" Header="Accessory Box Console" Margin="5">
+            <TextBlock Text="{Binding AccessoryBoxConsoleText}" />
         </GroupBox>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>

@@ -1,7 +1,9 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Timers;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
 
@@ -30,7 +32,7 @@ namespace UStallGUI.ViewModel
 
         private byte _updateInterval;
 
-        public byte UpdateInterval
+        public byte UpdateInterval // in ms
         {
             get => _updateInterval;
             set => Set(ref _updateInterval, value);
@@ -44,7 +46,21 @@ namespace UStallGUI.ViewModel
             set
             {
                 Set(ref _controlType, value);
-                ControllerHandlerViewModel.sendControllerValues = _controlType == 2;
+                switch (_controlType)
+                {
+                    case 1:
+                        InitManualControl();
+                        break;
+
+                    case 2:
+                        ControllerHandlerViewModel.sendControllerValues = true;
+                        break;
+
+                    default:
+                        ControllerHandlerViewModel.sendControllerValues = false;
+                        _manualControlTimer?.Stop();
+                        break;
+                }
             }
         }
 
@@ -58,6 +74,7 @@ namespace UStallGUI.ViewModel
 
         #region Manual Control
 
+        private Timer _manualControlTimer;
         private MotorValues _manualControlValues;
 
         public MotorValues ManualControlValues
@@ -117,16 +134,14 @@ namespace UStallGUI.ViewModel
 
         public bool GyroEnabled
         {
-            get
-            {
-                _gyroEnabled = currentConfig.GyroEnabled;
-                return _gyroEnabled;
-            }
+            get => _gyroEnabled;
             set
             {
-                Set(ref _gyroEnabled, value);
-                currentConfig.GyroEnabled = _gyroEnabled;
-                UpdateConfig();
+                if (Set(ref _gyroEnabled, value))
+                {
+                    currentConfig.GyroEnabled = value;
+                    UpdateConfig();
+                }
             }
         }
 
@@ -147,7 +162,7 @@ namespace UStallGUI.ViewModel
         }
 
         // Method to clamp the value between 0 and 2.55
-        private float Clamp255Float(float value)
+        private static float Clamp255Float(float value)
         {
             if (value < 0)
                 return 0;
@@ -196,7 +211,7 @@ namespace UStallGUI.ViewModel
                 if (response.Length != 0)
                 {
                     MainWindowViewModel.Instance.UpdateConnectionStatusLCE(2);
-                    MainWindowViewModel.Instance.ConsoleText = LCECommunicationHelper.LCE_MessageAddresses[response[0]];
+                    MainWindowViewModel.Instance.ControlBoxConsoleText = LCECommunicationHelper.LCE_MessageAddresses[response[0]];
                     UpdateInterval = await PullUpdateInterval();
                 }
                 else
@@ -221,7 +236,7 @@ namespace UStallGUI.ViewModel
             }
             else
             {
-                MainWindowViewModel.Instance.ConsoleText = "Serialport is currently closed";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = "Serialport is currently closed";
             }
         }
 
@@ -233,6 +248,19 @@ namespace UStallGUI.ViewModel
         {
         }
 
+        private void InitManualControl()
+        {
+            _manualControlTimer = new Timer(UpdateInterval * 2); // interval in milliseconds (e.g., 1000ms = 1s)
+            _manualControlTimer.Elapsed += ApplyManualControl;
+            _manualControlTimer.AutoReset = true; // repeat every interval
+            _manualControlTimer.Enabled = true;
+        }
+
+        private void ApplyManualControl(object sender, ElapsedEventArgs e)
+        {
+            sp.WriteBytes(LCE_CommandAddresses.ApplyManualControl, ManualControlValues.GetAsByte());
+        }
+
         private async void ApplyUpdateInterval()
         {
             byte oldCycleInterval = await PullUpdateInterval();
@@ -241,7 +269,7 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.UpdateCylceTime, [UpdateInterval]);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.UpdateCycleTime_Response);
-                if (response.Length > 0) MainWindowViewModel.Instance.ConsoleText = $"Updating Cycle Time from {oldCycleInterval} to {response[0]} {(oldCycleInterval == response[0] ? "Failed!" : "was Successful!")}";
+                if (response.Length > 0) MainWindowViewModel.Instance.ControlBoxConsoleText = $"Updating Cycle Time from {oldCycleInterval} to {response[0]} {(oldCycleInterval == response[0] ? "Failed!" : "was Successful!")}";
             }
         }
 
@@ -268,7 +296,7 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.ResetError);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.ResetError_Response);
-                if (response.Length != 0 && response[0] == 0x01) MainWindowViewModel.Instance.ConsoleText = "Resetting Error was successful";
+                if (response.Length != 0 && response[0] == 0x01) MainWindowViewModel.Instance.ControlBoxConsoleText = "Resetting Error was successful";
             }
         }
 
@@ -283,10 +311,10 @@ namespace UStallGUI.ViewModel
                 {
                     GyroPValue = LCECommunicationHelper.ConvertByteTo255Float(response[0]);
                     GyroDValue = LCECommunicationHelper.ConvertByteTo255Float(response[1]);
-                    GyroEnabled = response[2] == 0x01;
-                    MainWindowViewModel.Instance.ConsoleText = "Pulling PID values was Successful!";
+                    GyroEnabled = (response[2] == 1);
+                    MainWindowViewModel.Instance.ControlBoxConsoleText = "Pulling PID values was Successful!";
                 }
-                else MainWindowViewModel.Instance.ConsoleText = "Pulling PID values failed!";
+                else MainWindowViewModel.Instance.ControlBoxConsoleText = "Pulling PID values failed!";
             }
         }
 
@@ -299,8 +327,8 @@ namespace UStallGUI.ViewModel
                 sp.WriteBytes(LCE_CommandAddresses.ApplyPidValues, payload);
                 await Task.Delay(100);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.ApplyPidValues_Response);
-                if (response.Length > 0) MainWindowViewModel.Instance.ConsoleText = "Applying PID values was Successful!";
-                else MainWindowViewModel.Instance.ConsoleText = "Applying PID values failed!";
+                if (response.Length > 0) MainWindowViewModel.Instance.ControlBoxConsoleText = "Applying PID values was Successful!";
+                else MainWindowViewModel.Instance.ControlBoxConsoleText = "Applying PID values failed!";
             }
         }
 

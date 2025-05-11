@@ -11,6 +11,8 @@ namespace UStallGUI.ViewModel
 {
     public class ControllerHandlerViewModel : ObservableObject
     {
+        public static ControllerHandlerViewModel Instance;
+
         public static bool sendControllerValues = false;
 
         private readonly int pollingFrequency = 200;
@@ -18,48 +20,23 @@ namespace UStallGUI.ViewModel
         private bool keepPolling = false;
 
         // Properties for binding
-        public ControllerModel CurrentControllerModel { get; set; }
-
-        private string connectedControllersText = "None";
+        public ControllerModel CurrentControllerModel { get; set; } = new();
 
         public ControllerHandlerViewModel()
         {
-            ScanForControllers = new RelayCommand(ScanConnectedControllers); // Default to controller index 0
+            Instance = this;
             ConnectToController = new RelayCommand(() => SetController(0)); // Default to controller index 0
-        }
-
-        private void ScanConnectedControllers()
-        {
-            List<string> connectedControllers = new List<string>();
-
-            for (int i = 0; i < 4; i++)
-            {
-                var controller = new Controller((UserIndex)i);
-                if (controller.IsConnected)
-                {
-                    // Get the controller's capabilities to determine its type
-                    var capabilities = controller.GetCapabilities(DeviceQueryType.Gamepad);
-                    string controllerType = capabilities.SubType.ToString(); // e.g., Gamepad, Wheel, etc.
-
-                    connectedControllers.Add($"Controller {i + 1} ({controllerType})");
-                }
-            }
-
-            if (connectedControllers.Count > 0) ConnectedControllers = string.Join(", ", connectedControllers);
-            else ConnectedControllers = "None";
-
-            MainWindowViewModel.Instance.ConsoleText = "Scanning connected Controllers complete";
         }
 
         private void SetController(int index)
         {
             Controller controller = new Controller((UserIndex)index);
-            CurrentControllerModel = new ControllerModel(controller);
+            CurrentControllerModel.Controller = controller;
 
             // Run the polling task in the background
             _ = Task.Run(ControllerTimerCallback);
 
-            MainWindowViewModel.Instance.ConsoleText = "Controller with Index 0 is connected";
+            MainWindowViewModel.Instance.ControlBoxConsoleText = "Controller with Index 0 is connected";
             MainWindowViewModel.Instance.ConnectionStatusController = "Connected";
         }
 
@@ -76,7 +53,7 @@ namespace UStallGUI.ViewModel
                     if (dividorCounter == 0)
                     {
                         if (sendControllerValues) SerialPortHandler.Instance?.WriteBytes(LCE_CommandAddresses.ApplyControllerValues, CurrentControllerModel.GetMovementBytes());
-                        Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
+                        //Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
                         dividorCounter = sendingDividor;
                     }
                     else dividorCounter--;
@@ -87,17 +64,10 @@ namespace UStallGUI.ViewModel
             }
             catch (Exception ex)
             {
-                MainWindowViewModel.Instance.ConsoleText = $"Controller Exception: {ex}";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = $"Controller Exception: {ex}";
             }
         }
 
-        public string ConnectedControllers
-        {
-            get => connectedControllersText;
-            private set => Set(ref connectedControllersText, value);
-        }
-
         public RelayCommand ConnectToController { get; set; }
-        public RelayCommand ScanForControllers { get; set; }
     }
 }
