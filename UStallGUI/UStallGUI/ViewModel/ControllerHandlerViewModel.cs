@@ -53,7 +53,7 @@ namespace UStallGUI.ViewModel
                     if (dividorCounter == 0)
                     {
                         if (sendControllerValues) SerialPortHandler.Instance?.WriteBytes(LCE_CommandAddresses.ApplyControllerValues, CurrentControllerModel.GetMovementBytes());
-                        //Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
+                        Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
                         dividorCounter = sendingDividor;
                     }
                     else dividorCounter--;
