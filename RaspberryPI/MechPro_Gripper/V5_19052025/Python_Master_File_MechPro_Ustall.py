@@ -33,7 +33,7 @@
 # Optimierung der Greifersteuerung                                                    // 10.05.2025       // Johann Spielvogel
 # Anpassung der Namensbezeichnung                                                     // 11.05.2025       // Johann Spielvogel
 # Anpassung der Funktion um den pH-Wert zu Messen                                     // 12.05.2025       // Johann Spielvogel
-#
+# Jellyfish Aufgabe implementiert                                                     // 19.05.2025       // Johann Spielvogel
 #
 #
 #

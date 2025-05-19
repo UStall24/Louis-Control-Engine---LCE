@@ -24,7 +24,7 @@
 # Kommunikation ueber Gamepad erweitert                                               // 24.04.2025       // Johann Spielvogel
 # Erstellung einer Grundstellungsfahrt                                                // 02.05.2025       // Johann Spielvogel
 # Anpassung der Grundstellungsfahrt                                                   // 10.05.2025       // Johann Spielvogel
-#
+# Jellyfish Aufgabe implementiert                                                     // 19.05.2025       // Johann Spielvogel
 #
 #
 
