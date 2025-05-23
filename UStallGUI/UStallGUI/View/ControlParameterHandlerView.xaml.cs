@@ -13,5 +13,10 @@ namespace UStallGUI.View
             InitializeComponent();
             DataContext = new ControlParameterHandlerViewModel();
         }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }
