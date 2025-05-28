@@ -144,7 +144,7 @@ namespace UStallGUI.ViewModel
                     }
                     else
                     {
-                        MainWindowViewModel.Instance.ConsoleText = "Requesting Direction Values from LCE failed - Invalid Data";
+                        MainWindowViewModel.Instance.ControlBoxConsoleText = "Requesting Direction Values from LCE failed - Invalid Data";
                         return;
                     }
                 }
@@ -158,9 +158,9 @@ namespace UStallGUI.ViewModel
 
                 LoadedDirectionValue = recievedDirectionValues;
 
-                MainWindowViewModel.Instance.ConsoleText = "Requesting Direction Values from LCE successful";
+                MainWindowViewModel.Instance.ControlBoxConsoleText = "Requesting Direction Values from LCE successful";
             }
-            else MainWindowViewModel.Instance.ConsoleText = "Requesting Direction Values from LCE failed - Serial Port is not open";
+            else MainWindowViewModel.Instance.ControlBoxConsoleText = "Requesting Direction Values from LCE failed - Serial Port is not open";
         }
 
         private async void ApplyDirectionValuesToLCE()
@@ -185,11 +185,11 @@ namespace UStallGUI.ViewModel
 
                 if (SerialPortHandler.Instance.LookForMessage(0x20).Length != 0)
                 {
-                    MainWindowViewModel.Instance.ConsoleText = "Writing Direction Values to LCE successful";
+                    MainWindowViewModel.Instance.ControlBoxConsoleText = "Writing Direction Values to LCE successful";
                 }
-                else MainWindowViewModel.Instance.ConsoleText = "Writing Direction Values to LCE failed - LCE is not Responding";
+                else MainWindowViewModel.Instance.ControlBoxConsoleText = "Writing Direction Values to LCE failed - LCE is not Responding";
             }
-            else MainWindowViewModel.Instance.ConsoleText = "Writing Direction Values to LCE failed - Serial Port is not open";
+            else MainWindowViewModel.Instance.ControlBoxConsoleText = "Writing Direction Values to LCE failed - Serial Port is not open";
         }
     }
 }

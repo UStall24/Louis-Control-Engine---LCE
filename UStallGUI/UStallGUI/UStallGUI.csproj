@@ -11,7 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="andritz_logo.png" />
     <None Remove="ROV_Model.png" />
+    <None Remove="ustall_logo.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MjpegProcessor" Version="1.0.0" />
+    <PackageReference Include="MQTTnet" Version="4.3.7.1207" />
     <PackageReference Include="MvvmLightLibs" Version="5.4.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="SharpDX" Version="4.2.0" />
@@ -28,7 +32,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="andritz_logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="ROV_Model.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="ustall_logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

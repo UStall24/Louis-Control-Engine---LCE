@@ -5,13 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:UStallGUI.View" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:SetupHandlerViewModel}"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="800" Background="White">
+             d:DesignHeight="450" d:DesignWidth="400" Background="White">
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition />
-            <ColumnDefinition />
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -49,7 +46,7 @@
                 <Button Grid.Row="4" Grid.Column="1" Margin="5" Content="Reset" Command="{Binding ResetErrorLCE_Command}" />
             </Grid>
         </GroupBox>
-        <GroupBox Grid.Column="1" Margin="5" Header="Manual Control">
+        <GroupBox Grid.Row="2" Margin="5" Header="Manual Control">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -72,12 +69,12 @@
                 <Label Grid.Row="1" Grid.Column="2" Content="HM2" VerticalAlignment="Center" />
                 <Label Grid.Row="1" Grid.Column="4" Content="HM3" VerticalAlignment="Center" />
 
-                <TextBox Grid.Row="0" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM1}" />
-                <TextBox Grid.Row="0" Grid.Column="3" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM2}" />
-                <TextBox Grid.Row="0" Grid.Column="5" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM3}" />
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM1}" />
-                <TextBox Grid.Row="1" Grid.Column="3" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM2}" />
-                <TextBox Grid.Row="1" Grid.Column="5" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM3}" />
+                <TextBox Grid.Row="0" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="0" Grid.Column="3" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="0" Grid.Column="5" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.VM3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM1, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="1" Grid.Column="3" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM2, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="1" Grid.Column="5" Margin="5" Background="AliceBlue" Text="{Binding ManualControlValues.HM3, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                 <Label Grid.Row="2" Grid.Column="0" Content="All Vertical" VerticalAlignment="Center" />
                 <Label Grid.Row="2" Grid.Column="2" Content="All Horizontal" VerticalAlignment="Center" />
@@ -106,8 +103,8 @@
                 <CheckBox Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding GyroEnabled, UpdateSourceTrigger=PropertyChanged}" />
                 <Label Content="P-Value: " Grid.Row="1" />
                 <Label Content="D-Value: " Grid.Row="2" />
-                <TextBox Grid.Row="1" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding GyroPValue, UpdateSourceTrigger=PropertyChanged}" />
-                <TextBox Grid.Row="2" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding GyroDValue, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="1" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding GyroPValue}" />
+                <TextBox Grid.Row="2" Grid.Column="1" Margin="5" Background="AliceBlue" Text="{Binding GyroDValue}" />
                 <Button Grid.Row="1" Grid.Column="2" Margin="5" Content="Pull" Command="{Binding PullGyroValues_Command}" />
                 <Button Grid.Row="2" Grid.Column="2" Margin="5" Content="Apply" Command="{Binding ApplyGyroValues_Command}" />
             </Grid>

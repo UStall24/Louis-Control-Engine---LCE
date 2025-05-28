@@ -1,0 +1,631 @@
+<!--
+    ###################################################################
+    #---File-Informationen--------------------------------------------#
+    ###################################################################
+    # File Name: WebInterface_MechPro_Ustall.html
+    # Projekt: Mechatronisches Projekt
+    # Gruppe: Johann Spielvogel, Tim Richer, Jennifer Gastgeb, Pascal Roskamp
+    # Semester: 6
+    # Hochschule Esslingen
+-->
+
+
+<!--
+    #----------------------------------------------Aenderungsverzeichnis----------------------------------------------------
+        #                          Aenderung                                    //   Datum          //      Name
+        # Erstellung des Skripts                                                // 05.04.2025       // Johann Spielvogel
+        # Anpassung im optischen Design                                         // 06.04.2025       // Johann Spielvogel
+        # MQTT Anpassung                                                        // 09.04.2025       // Johann Spielvogel
+        # Funktion Darkmode hinzufuegen                                         // 11.04.2025       // Johann Spielvogel
+        # Hintergrundbilder anpassen bei Moduswechsel                           // 12.04.2025       // Johann Spielvogel
+        # Programmstruktur ueberarbeiten                                        // 12.04.2025       // Johann Spielvogel
+        # Anpassung der MQTT Nachrichten                                        // 13.04.2025       // Johann Spielvogel
+        # Einbinden der Funktion um den pH-Wert zu Messen                       // 13.04.2025       // Johann Spielvogel
+        # Erweiterung der Funktion um den pH-Wert zu Messen                     // 14.04.2025       // Johann Spielvogel
+        # Jellyfish Aufgabe implementiert                                       // 19.05.2025       // Johann Spielvogel
+        # Anpassung der Pumpensteuerung                                         // 22.05.2025       // Johann Spielvogel
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+        #
+-->
+
+
+<!--
+#####################################################
+#---Programmcode------------------------------------#
+#####################################################
+-->
+
+
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <!--
+    #####################################################
+    #---Allgemeines-------------------------------------#
+    #####################################################
+    -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebInterface</title>
+    <link rel="icon" href="data:,">
+    <script src="{{ url_for('static', filename='jquery.min.js')}}"></script>
+    <script src="{{ url_for('static', filename='mqttws31.js')}}"></script>
+    <link rel="stylesheet" href="/static/fontawesome/css/all.min.css">
+
+    
+    <!--
+    #####################################################
+    #---style-------------------------------------------#
+    #####################################################
+    -->
+
+    <style>
+        body {
+            background-image: url('http://192.168.0.3:8080/static/Bild_Greiferarm_1.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .video-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        #myVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #content {
+            display: none;
+            z-index: 1;
+            position: relative;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        #header {
+            background-color: #04effc;
+            padding: 4px;
+            color: #000000;
+            text-align: center;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 20px;
+            border-radius: 30px;
+        }
+
+        #header-image {
+            position: absolute;
+            right: 30px;
+            max-height: 90%;
+        }
+
+        #footer {
+            background-color: #04effc;
+            padding: 4px;
+            color: #000000;
+            text-align: center;
+            height: 80px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            font-family: "Arial";
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border-radius: 30px;
+        }
+
+        #quickSelection {
+            position: absolute;
+            top: 340px;
+            right: 30%;
+            transform: translateY(-50%);
+            background-color: #04effc;
+            padding: 10px 15px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        #quickSelection h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .quickBtn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 5px;
+            background-color: #3978ee;
+            color: #ffffff;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .quickBtn:hover {
+            background-color: #3978ee;
+            transform: scale(0.95);
+        }
+
+        #pHSection {
+            position: absolute;
+            top: 340px;
+            right: 30%;
+            transform: translateY(-50%);
+            background-color: #04effc;
+            padding: 10px 15px;
+            border-radius: 20px;
+            width: fit-content;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 30px;
+            background-color: #ffffff;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #progressBarFill {
+            height: 100%;
+            background-color: #FF8F00;
+            width: 0;
+        }
+
+        #statusContainer {
+            display: none;
+            position: fixed;
+            top: 200px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background-color: #04effc;
+            border-radius: 30px;
+            padding: 15px;
+            overflow-y: auto;
+            font-size: 14px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        #statusLog {
+            max-height: 100%;
+            overflow-y: auto;
+            font-family: monospace;
+            color: #333;
+        }
+
+        .status-entry {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        #clearLogBtn {
+            background-color: #3978ee;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        #clearLogBtn:hover {
+            background-color: #3978ee;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #f1f1f1;
+        }
+
+        body.dark-mode #header,
+        body.dark-mode #footer,
+        body.dark-mode #pHValue,
+        body.dark-mode #quickSelection {
+            background-color: #1e1e1e;
+            color: #f1f1f1;
+            border-color: #333;
+        }
+
+        body.dark-mode .quickBtn {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        body.dark-mode .quickBtn:hover {
+            background-color: #555555;
+        }
+
+        body.dark-mode #clearLogBtn {
+            background-color: #6d6d6d;
+        }
+
+        body.dark-mode #clearLogBtn:hover {
+            background-color: #555555;
+        }
+            
+        #darkModeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #04effc; 
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        body.dark-mode #darkModeToggle {
+            background-color: #1e1e1e; 
+            color: #ffffff; 
+        }
+
+        body.dark-mode #darkModeToggle:hover {
+            background-color: #3a3a3a; 
+        }
+
+        body.dark-mode #statusContainer {
+            background-color: #2e2e2e; 
+            color: #f1f1f1; 
+        }
+
+        body.dark-mode .status-entry {
+            color: #ffffff;
+        }
+
+        body.dark-mode {
+            background-image: url('http://192.168.0.3:8080/static/Bild_Greiferarm_1_dark.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .switch {
+        position: absolute;
+        top: 150px;
+        right: 30px;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+        z-index: 10;
+        }
+
+        .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        }
+
+        .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #98999b;
+        transition: 0.4s;
+        border-radius: 34px;
+        }
+
+        .slider::before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+        }
+
+        input:checked + .slider {
+        background-color: #2196F3;
+        }
+
+        input:checked + .slider::before {
+        transform: translateX(26px);
+        }
+
+        #pHValue {
+        margin: 10px 0;
+        font-size: 1.5rem;
+        color: #333;
+    }
+
+    </style>
+</head>
+
+
+
+<!--
+    #####################################################
+    #---body--------------------------------------------#
+    #####################################################
+-->
+
+<body>
+    <div id="darkModeContainer" style="display: none; align-items: center; gap: 10px; z-index: 10;">
+        <span style="position: absolute; top: 156px; right: 100px; font-weight: bold; font-size: 16px;">Darkmode</span>
+        <label class="switch" title="Darkmode umschalten" style="margin: 0;">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider"></span>
+        </label>
+    </div>
+
+
+    <div class="video-container">
+        <video id="myVideo" autoplay controls onended="showContent()" ontimeupdate="updateProgressBar()">
+            <source src="http://192.168.0.3:8080/static/Introvideo_MechPro.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+
+    <div id="content">
+
+        <div id="header">
+            <h2>MechPro Ustall WebInterface</h2>
+            <img id="header-image" src="http://192.168.0.3:8080/static/HE_Logo.jpg" alt="Bild">
+        </div>
+
+        <div id="quickSelection" style="top: 30vh; left: 25vh;">
+            <h3>Servo 1</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SLD_1')"
+                    onmouseup="sendCommand('S_1_S')">
+                <i class="fas fa-rotate-left spinning-icon"></i>
+            </button>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SRD_1')"
+                    onmouseup="sendCommand('S_1_S')">
+                <i class="fas fa-rotate-right spinning-icon"></i>
+            </button>
+        </div>
+
+        <div id="quickSelection" style="top: 50vh; left: 75vh;">
+            <h3>Servo 2</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SLD_2')"
+                    onmouseup="sendCommand('S_2_S')">
+                <i class="fas fa-rotate-left spinning-icon"></i>
+            </button>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SRD_2')"
+                    onmouseup="sendCommand('S_2_S')">
+                <i class="fas fa-rotate-right spinning-icon"></i>
+            </button>
+        </div>
+
+        <div id="quickSelection" style="top: 73vh; left: 75vh;">
+            <h3>Jellyfish</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('JF_z')"
+                    onmouseup="sendCommand('JF_S')">
+                zu
+            </button>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('JF_a')"
+                    onmouseup="sendCommand('JF_S')">
+                auf
+            </button>
+        </div>
+
+        <!-- <div id="quickSelection" style="top: 35vh; right: 80vh;">
+            <h3>Servo 3</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SLD_3')"
+                    onmouseup="sendCommand('S_3_S')">
+                <i class="fas fa-rotate-left spinning-icon"></i>
+            </button>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('SRD_3')"
+                    onmouseup="sendCommand('S_3_S')">
+                <i class="fas fa-rotate-right spinning-icon"></i>
+            </button>
+        </div> -->
+
+        <div id="quickSelection"  style="position: fixed; top: 75vh; left: 5vw;">
+            <h3>Pumpe</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('P_ein')">
+                    <!-- onmouseup="sendCommand('P_aus')"> -->
+                <i class="fas fa-tachometer-alt"></i>
+            </button>
+        </div>
+
+        <div id="quickSelection"  style="position: fixed; top: 35vh; right: 25vw;">
+            <h3>Grundstellung</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('GSF')">
+                <i class="fas fa-home"></i>
+            </button>
+        </div>
+
+        <div id="quickSelection"  style="position: fixed; top: 75vh; right: 25vw;">
+            <h3 id="pHValue">pH-Wert: --</h3>
+            <button class="quickBtn"
+                    onmousedown="sendCommand('Start_pH_Messung')"
+                    onmouseup="sendCommand('Stopp_pH_Messung')">
+                <i class="fas fa-tachometer-alt"></i>
+            </button>
+        </div>
+
+        <div id="footer">
+            <h4 style="text-align: center; margin: 0">
+                HS Esslingen || Mechatronisches Projekt || Semester 6 
+            </h4>
+            <img id="header-image" src="http://192.168.0.3:8080/static/U_Stall_Logo.jpg" alt="Bild">
+        </div>
+
+    </div>
+
+    <div id="statusContainer">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>Statusmeldungen</h3>
+            <button id="clearLogBtn" title="Meldungen löschen">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+        <div id="statusLog"></div>
+    </div>
+
+    <div id="progressBar">
+        <div id="progressBarFill"></div>
+    </div>
+    
+
+    <!--
+    #####################################################
+    #---script------------------------------------------#
+    #####################################################
+    -->
+    <script>
+        
+        //#####################################################
+        //#---Darkmode----------------------------------------#
+        //#####################################################
+        const darkModeBtn = document.getElementById("darkModeToggle");
+        // Darkmode aktivieren/deaktivieren
+        darkModeBtn.addEventListener("click", () => {
+            document.body.classList.toggle("dark-mode");
+            // Optional: Icon aendern
+            darkModeBtn.textContent = document.body.classList.contains("dark-mode") ? "Kein Darkmode" : "Darkmode";
+            // Optional: Mode im localStorage speichern
+            localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+        });
+        // Darkmode beim Laden wiederherstellen
+        window.addEventListener("load", () => {
+            const isDark = localStorage.getItem("darkMode") === "true";
+            if (isDark) {
+                document.body.classList.add("dark-mode");
+                darkModeBtn.textContent = "Kein Darkmode";
+            }
+        });
+
+
+        //#####################################################
+        //#---MQTT Broker-------------------------------------#
+        //#####################################################
+        function sendCommand(direction) {
+            const broker = new Paho.MQTT.Client("192.168.0.3", Number(8081), "clientId-" + Math.random());
+            broker.onConnectionLost = onConnectionLost;
+            broker.connect({ onSuccess: onConnect});
+
+            function onConnect() {
+                console.log("Connected");
+                const message = new Paho.MQTT.Message(direction);
+                message.destinationName = "Ustall/MechPro";
+                broker.send(message);
+            }
+
+            function onConnectionLost(responseObject) {
+                if (responseObject.errorCode !== 0) {
+                    console.log("Verbindung verloren: " + responseObject.errorMessage);
+                }
+            }
+        }
+
+        function showContent() {
+            document.getElementById("content").style.display = "block";
+            document.getElementsByClassName("video-container")[0].style.display = "none";
+            document.getElementById("progressBar").style.display = "none";
+            document.getElementById("statusContainer").style.display = "block";
+            document.getElementById("darkModeContainer").style.display = "flex";
+        }
+
+        function updateProgressBar() {
+            const video = document.getElementById("myVideo");
+            const progressBarFill = document.getElementById("progressBarFill");
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBarFill.style.width = `${progress}%`;
+            document.getElementById("progressBar").style.display = "block";
+        }
+
+
+        //#####################################################
+        //#---MQTT Client-------------------------------------#
+        //#####################################################
+        let mqttClient = new Paho.MQTT.Client("192.168.0.3", Number(8081), "webStatusClient-" + Math.random());
+
+        mqttClient.onConnectionLost = function (responseObject) {
+            console.log("Verbindung verloren: " + responseObject.errorMessage);
+        };
+
+        mqttClient.onMessageArrived = function (message) {
+            const log = document.getElementById("statusLog");
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = document.createElement("div");
+            entry.className = "status-entry";
+            entry.innerHTML = `<strong>[${timestamp}]</strong> ${message.payloadString}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+
+            if (message.destinationName === "Ustall/pH_Wert") {
+                const pHWert = message.payloadString;
+                document.getElementById("pHValue").innerText = `pH-Wert: ${pHWert}`;
+            }
+
+        };
+
+        mqttClient.connect({
+            onSuccess: function () {
+                console.log("Status-MQTT verbunden");
+                mqttClient.subscribe("Ustall/Status");
+                mqttClient.subscribe("Ustall/pH_Wert"); //pH-Wert
+            },
+            useSSL: false
+        });
+
+        document.getElementById("clearLogBtn").addEventListener("click", function () {
+            const log = document.getElementById("statusLog");
+            log.innerHTML = "";
+        });
+
+
+    </script>
+</body>
+</html>
+
+
+ <!------------------------------------------FILE ENDE---------------------------------------------->
