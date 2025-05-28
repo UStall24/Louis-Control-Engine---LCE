@@ -49,18 +49,16 @@ namespace UStallGUI.Model
 
         public bool Close()
         {
-            bool successful = false;
             if (serialPort.IsOpen)
             {
+                serialPort.DataReceived -= SerialPort_DataReceived;
                 try
                 {
-                    serialPort.DataReceived -= SerialPort_DataReceived;
-                    serialPort.Close(); // Close the serial port
-                    successful = true;
+                    return Task.Run(() => { serialPort.Close(); }).Wait(TimeSpan.FromSeconds(2));
                 }
-                catch (Exception) { }
+                catch { }
             }
-            return successful;
+            return false;
         }
 
         public void WriteBytes(LCE_CommandAddresses addressByte, byte[] data = null) => WriteBytes((byte)addressByte, data);
@@ -97,8 +95,8 @@ namespace UStallGUI.Model
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
             byte[] message = ReadBytes();
-            Console.WriteLine($"Received message length: {message.Length}");
-
+            string hexMessage = BitConverter.ToString(message);
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Received message length: {message.Length}, message (hex): {hexMessage}");
             // Add the new bytes to the buffer
             bytesBuffer.AddRange(message);
 

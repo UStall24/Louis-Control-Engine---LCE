@@ -50,8 +50,12 @@
                 <Image Source="/andritz_logo.png" />
             </Viewbox>
         </Grid>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Grid.ColumnSpan="100">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -62,6 +66,10 @@
             <Label Grid.Column="1" Content="{Binding ConnectionStatusLCE}" FontSize="8" />
             <Label Content="Controller Connected: " FontSize="8" Grid.Column="2" />
             <Label Content="{Binding ConnectionStatusController}" FontSize="8" Grid.Column="3" />
+            <Label Content="Selected Gripper: " FontSize="8" Grid.Column="3" />
+            <Label Content="{Binding SelectedGripper}" FontSize="8" Grid.Column="4" />
+            <Label Content="RPi 5 CPU Temperature: " FontSize="8" Grid.Column="5" />
+            <Label Content="{Binding RPiTemperature}" FontSize="8" Grid.Column="6" />
         </Grid>
     </Grid>
 </Window>

@@ -1,9 +1,13 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Server;
 using System;
 using System.Data;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
@@ -13,6 +17,8 @@ namespace UStallGUI.ViewModel
 {
     public class AccessoryBoxViewModel : ObservableObject
     {
+        private IMqttClient mqttClient;
+        private MqttClientOptions mqttClientOptions;
         public GripperModel GripperModel { get; set; } = new();
 
         private int _mqtt_port;
@@ -65,6 +71,7 @@ namespace UStallGUI.ViewModel
         {
             if (_mqttSender != null && _mqttSender.IsConnected)
             {
+                bool mechpro_gripper_execution = false;
                 switch (assignment)
                 {
                     case GripperAssignment.Gripper1_Servo1Plus:
@@ -83,23 +90,20 @@ namespace UStallGUI.ViewModel
                         GripperModel.A1M2 -= step;
                         break;
 
-                    case GripperAssignment.Gripper2_Servo1Plus:
-                        GripperModel.A2M1 += step;
+                    case GripperAssignment.Gripper1_Servo3Plus:
+                        GripperModel.A1M3 += step;
                         break;
 
-                    case GripperAssignment.Gripper2_Servo1Minus:
-                        GripperModel.A2M1 -= step;
+                    case GripperAssignment.Gripper1_Servo3Minus:
+                        GripperModel.A1M3 -= step;
                         break;
 
-                    case GripperAssignment.Gripper2_Servo2Plus:
-                        GripperModel.A2M2 += step;
-                        break;
-
-                    case GripperAssignment.Gripper2_Servo2Minus:
-                        GripperModel.A2M2 -= step;
+                    default:
+                        _mqttSender.SendMechProGripperValues(GripperModel.MechproGripperExecuteMessage(assignment));
+                        mechpro_gripper_execution = true;
                         break;
                 }
-                _ = _mqttSender.SendGripperValues();
+                if (!mechpro_gripper_execution) _ = _mqttSender.SendSimpleGripperValues();
             }
             else MainWindowViewModel.Instance.AccessoryBoxConsoleText = "Connect to Accessory Box first";
         }
@@ -111,17 +115,15 @@ namespace UStallGUI.ViewModel
             if (ControllerHandlerViewModel.Instance.CurrentControllerModel != null)
             {
                 MainWindowViewModel.Instance.AccessoryBoxConsoleText = "Trying to connect";
+                bool connected = await Connect2MqttServer();
 
-                _mqttSender = new MqttGripperSender(
-                brokerAddress: "192.168.0.3",
-                port: 1883,
-                topic: "greifer/values",
-                gripperModel: GripperModel
-                );
-
-                bool connected = await _mqttSender.StartAsync();
                 if (connected)
                 {
+                    _mqttSender = new MqttGripperSender(
+                    mqttClient: this.mqttClient,
+                    gripperModel: GripperModel
+                    );
+
                     MainWindowViewModel.Instance.AccessoryBoxConsoleText = "Connected to Accessory Box RPi";
                     AssignControllerToGripperAction();
                 }
@@ -138,7 +140,7 @@ namespace UStallGUI.ViewModel
             ControllerHandlerViewModel.Instance.CurrentControllerModel.ButtonAPressed += () =>
             {
                 SelectedGripper += 1;
-                if (SelectedGripper > 2) SelectedGripper = 0;
+                if (SelectedGripper > 3) SelectedGripper = 0;
             };
 
             // Control Style 1
@@ -147,7 +149,7 @@ namespace UStallGUI.ViewModel
                 if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
                 {
                     if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo1Plus);
-                    if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Plus);
+                    if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Plus);
                 }
             };
             ControllerHandlerViewModel.Instance.CurrentControllerModel.DPadDownPressed += () =>
@@ -155,7 +157,7 @@ namespace UStallGUI.ViewModel
                 if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
                 {
                     if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo1Minus);
-                    if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Minus);
+                    if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Minus);
                 }
             };
             ControllerHandlerViewModel.Instance.CurrentControllerModel.DPadRightPressed += () =>
@@ -163,7 +165,7 @@ namespace UStallGUI.ViewModel
                 if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
                 {
                     if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo2Plus);
-                    if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Plus);
+                    if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Plus);
                 }
             };
             ControllerHandlerViewModel.Instance.CurrentControllerModel.DPadLeftPressed += () =>
@@ -171,8 +173,24 @@ namespace UStallGUI.ViewModel
                 if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
                 {
                     if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo2Minus);
-                    if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Minus);
+                    if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Minus);
                 }
+            };
+            ControllerHandlerViewModel.Instance.CurrentControllerModel.ButtonXPressed += () =>
+            {
+                if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
+                {
+                    if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo3Plus);
+                }
+                if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_PumpOn); // Both Control styles
+            };
+            ControllerHandlerViewModel.Instance.CurrentControllerModel.ButtonYPressed += () =>
+            {
+                if (ControllerHandlerViewModel.Instance.CurrentControllerModel.ControlStyle == 0)
+                {
+                    if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo3Minus);
+                }
+                if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_DefaultPosition); // Both control styles
             };
 
             // Control Style 2
@@ -190,11 +208,36 @@ namespace UStallGUI.ViewModel
 
                 //Console.WriteLine($"Right Joystick: {(ControllerHandlerViewModel.Instance.CurrentControllerModel.RightJoystickY - 127.5f) / 127.5f}. StepValue: {stepValue}");
                 if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo1Plus, stepValue);
-                if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Plus, stepValue);
+                if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo3Plus, stepValue);
+                if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo1Plus, stepValue);
 
                 stepValue = (int)Math.Round(((ControllerHandlerViewModel.Instance.CurrentControllerModel.RightJoystickX - 127.5f) / 127.5f) * 5);
-                if (SelectedGripper == 1) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo2Plus, stepValue);
-                if (SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Plus, stepValue);
+                if (SelectedGripper == 1 || SelectedGripper == 2) ExecuteGripperCommand(GripperAssignment.Gripper1_Servo2Plus, stepValue);
+                if (SelectedGripper == 3) ExecuteGripperCommand(GripperAssignment.Gripper2_Servo2Plus, stepValue);
+            }
+        }
+
+        public async Task<bool> Connect2MqttServer()
+        {
+            var factory = new MqttFactory();
+            mqttClient = factory.CreateMqttClient();
+
+            mqttClientOptions = new MqttClientOptionsBuilder()
+                .WithClientId("GripperSenderClient")
+                .WithTcpServer(MqttIpAddr, MqttPort)
+                .WithCleanSession()
+                .Build();
+            try
+            {
+                if (!mqttClient.IsConnected)
+                {
+                    await mqttClient.ConnectAsync(mqttClientOptions);
+                }
+                return mqttClient.IsConnected;
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
     }
@@ -205,9 +248,13 @@ namespace UStallGUI.ViewModel
         Gripper1_Servo1Minus,
         Gripper1_Servo2Plus,
         Gripper1_Servo2Minus,
+        Gripper1_Servo3Plus,
+        Gripper1_Servo3Minus,
         Gripper2_Servo1Plus,
         Gripper2_Servo1Minus,
         Gripper2_Servo2Plus,
-        Gripper2_Servo2Minus
+        Gripper2_Servo2Minus,
+        Gripper2_PumpOn,
+        Gripper2_DefaultPosition
     }
 }

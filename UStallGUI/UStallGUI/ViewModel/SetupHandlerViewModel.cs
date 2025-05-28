@@ -206,7 +206,7 @@ namespace UStallGUI.ViewModel
                 MainWindowViewModel.Instance.UpdateConnectionStatusLCE(1);
 
                 sp.WriteBytes(LCE_CommandAddresses.InitThrusters);
-                await Task.Delay(100);
+                await Task.Delay(250);
                 byte[] response = sp.LookForMessage(LCE_ResponseAddresses.InitThrusters_Response);
                 if (response.Length != 0)
                 {
