@@ -1,0 +1,14 @@
+﻿<Window x:Class="Greifer_GUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Greifer_GUI"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Label Content="COM Port:" VerticalAlignment="Top" Margin="30,88,650,0" />
+        <TextBox Background="AliceBlue" Margin="155,91,555,323" Text="{Binding ComPort}" />
+        <Button Margin="255,91,455,323" Content="Connect To LCE" Command="{Binding ConnectToLCE_Command}" />
+    </Grid>
+</Window>
