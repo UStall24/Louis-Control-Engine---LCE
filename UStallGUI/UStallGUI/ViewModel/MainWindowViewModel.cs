@@ -178,7 +178,7 @@ namespace UStallGUI.ViewModel
             }
         }
 
-        private string _selectedGripper;
+        private string _selectedGripper = "0";
         public string SelectedGripper { get => _selectedGripper; set => Set(ref _selectedGripper, value); }
         private string _rpiTemperature;
         public string RPiTemperature { get => _rpiTemperature; set => Set(ref _rpiTemperature, value); }

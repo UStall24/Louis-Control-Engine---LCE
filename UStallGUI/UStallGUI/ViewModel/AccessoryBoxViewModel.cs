@@ -6,6 +6,7 @@ using MQTTnet.Server;
 using System;
 using System.Data;
 using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -133,7 +134,16 @@ namespace UStallGUI.ViewModel
         }
 
         private int _selectedGripper = 0;
-        public int SelectedGripper { get => _selectedGripper; set => Set(ref _selectedGripper, value); }
+
+        public int SelectedGripper
+        {
+            get => _selectedGripper;
+            set
+            {
+                Set(ref _selectedGripper, value);
+                MainWindowViewModel.Instance.SelectedGripper = value.ToString();
+            }
+        }
 
         private void AssignControllerToGripperAction()
         {
@@ -227,18 +237,45 @@ namespace UStallGUI.ViewModel
                 .WithTcpServer(MqttIpAddr, MqttPort)
                 .WithCleanSession()
                 .Build();
+
+            mqttClient.ApplicationMessageReceivedAsync += HandleReceivedMessage;
+
             try
             {
                 if (!mqttClient.IsConnected)
                 {
                     await mqttClient.ConnectAsync(mqttClientOptions);
                 }
+
+                if (mqttClient.IsConnected)
+                {
+                    await SubscribeToTopics();
+                }
+
                 return mqttClient.IsConnected;
             }
             catch (Exception)
             {
                 return false;
             }
+        }
+
+        private async Task SubscribeToTopics()
+        {
+            await mqttClient.SubscribeAsync("temperature/rpi");
+        }
+
+        private Task HandleReceivedMessage(MqttApplicationMessageReceivedEventArgs e)
+        {
+            string topic = e.ApplicationMessage.Topic;
+            string payload = Encoding.UTF8.GetString(e.ApplicationMessage.PayloadSegment);
+
+            if (topic == "temperature/rpi")
+            {
+                MainWindowViewModel.Instance.RPiTemperature = payload;
+            }
+
+            return Task.CompletedTask;
         }
     }
 
