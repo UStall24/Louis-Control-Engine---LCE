@@ -179,9 +179,13 @@ class Calculator:
             current_values = self.calc_current_values(force_values)
             total_current = sum(current_values)
             iteration += 1
-
-        # Corrected PWM and current calculations:
-        pwm_values = self.calc_pwm_values(force_values)
+        
+        if total_current > self.max_current_load * 1.1: # a max 10% overshoot is permissible
+            pwm_values = [self.deadZoneDefault] * 6
+            print("Dynamic throttle over allowed max current load")
+        else:
+            # Corrected PWM and current calculations:
+            pwm_values = self.calc_pwm_values(force_values)
         return pwm_values, force_values, current_values
     
     def calc_pwm_values(self,force_values):
