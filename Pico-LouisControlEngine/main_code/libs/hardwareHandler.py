@@ -39,7 +39,12 @@ class HardwareHandler:
             byte_array.append(0x00)
         payload = bytes(byte_array)
         self.uart.write(payload)
+        print_as_hex(payload)
         
+    
+def print_as_hex(byte_array):
+    msg = "Sent data (hex):" + " ".join(f"{byte:02X}" for byte in byte_array)
+    print(msg)
 
 
 

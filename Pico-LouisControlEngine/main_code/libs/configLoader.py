@@ -46,6 +46,31 @@ def update_direction_values(direction_values, direction_values_matrix):
 
     return direction_values
 
+def read_performance_chart(path):
+    pwm_chart = []
+    current_chart = []
+    force_chart = []
+    try:
+        with open(path) as f:
+            lines = f.readlines()
+
+        for line in lines[1:]:  # skip header
+            parts = line.strip().split(';')
+            if len(parts) >= 7:
+                try:
+                    pwm = int(parts[0])
+                    current = float(parts[2].replace(',', '.'))
+                    force = float(parts[5].replace(',', '.'))
+                    pwm_chart.append(pwm)
+                    current_chart.append(current)
+                    force_chart.append(force)
+                except:
+                    pass  # skip malformed lines
+    except:
+        print("Failed to read or parse CSV.")
+    return pwm_chart, current_chart, force_chart
+
+
 if __name__ == "__main__":
     test_data = {"key": "value"}
     write_json_file("test.json", test_data)

@@ -1,7 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Newtonsoft.Json.Linq;
 using System;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Timers;
 using UStallGUI.Helpers;
@@ -38,7 +38,7 @@ namespace UStallGUI.ViewModel
             set => Set(ref _updateInterval, value);
         }
 
-        private int _controlType;
+        private int _controlType = 2;
 
         public int ControlType
         {
@@ -49,15 +49,16 @@ namespace UStallGUI.ViewModel
                 switch (_controlType)
                 {
                     case 1:
+                        ControllerHandlerViewModel.SendControllerValues = false;
                         InitManualControl();
                         break;
 
                     case 2:
-                        ControllerHandlerViewModel.sendControllerValues = true;
+                        ControllerHandlerViewModel.SendControllerValues = true;
                         break;
 
                     default:
-                        ControllerHandlerViewModel.sendControllerValues = false;
+                        ControllerHandlerViewModel.SendControllerValues = false;
                         _manualControlTimer?.Stop();
                         break;
                 }
@@ -176,15 +177,36 @@ namespace UStallGUI.ViewModel
 
         #endregion Gyro
 
+        #region Options
+
+        private bool _dynamicThrottleEnabled;
+
+        public bool DynamicThrottleEnabled
+        {
+            get
+            {
+                _dynamicThrottleEnabled = currentConfig.DynamicThrottleEnabled;
+                return _dynamicThrottleEnabled;
+            }
+            set
+            {
+                Set(ref _dynamicThrottleEnabled, value);
+                currentConfig.DynamicThrottleEnabled = value;
+                ControllerHandlerViewModel.UseDynamicThrottle = value;
+                UpdateConfig();
+            }
+        }
+
+        #endregion Options
+
         private ConfigGUI currentConfig;
         private SerialPortHandler sp;
 
         public SetupHandlerViewModel()
         {
             ManualControlValues = new MotorValues([0, 0, 0, 0, 0, 0]);
-            ControlType = 2; // Default Controller
             currentConfig = ConfigLoader.LoadConfigGUI();
-
+            ControlType = 2;
             ConnectToLCE_Command = new(ConnectToLCE);
             InitThrusters_Command = new(InitThrusters);
             DeinitThrusters_Command = new(DeinitThrusters);

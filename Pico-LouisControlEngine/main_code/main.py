@@ -4,7 +4,7 @@ from libs.hardwareHandler import HardwareHandler
 from libs.calculator import Calculator
 from libs.configLoader import *
 from libs.imu_wrapper import IMUWrapper
-from libs.communicationHelperLib1 import *
+from libs.communicationHelperLib import *
 
 def print_verbose(msg):
     if verbose:
@@ -39,12 +39,19 @@ def apply_manual_control(data):
         hardware.set_motor_speed_all(pwm_values)
         hardware.send_message_code_uart(0x02)
 
-def apply_controller_values(data):
+def apply_controller_values(data, use_dynamic_throttle):
     if hardware.mot_pwms[0] != None:
         controller_values = list(data[1:8])
         throttle_value = calculator.calc_throttle_value2(controller_values)
-        pwm_values = calculator.calc_all_motor_pwm(throttle_value, False)
-        print("PWM value:", pwm_values)
+        if not use_dynamic_throttle:
+            pwm_values = calculator.calc_all_motor_pwm(throttle_value, False)
+            print("Static PWM value:" , pwm_values)
+            
+        else:
+            pwm_values, force_values, current_values = calculator.dynamic_throttle_2_pwm(throttle_value)
+            print("Dynamic PWM value:", pwm_values)
+
+            
         hardware.set_motor_speed_all(pwm_values)
 
 def init_motor_sequence():
@@ -59,7 +66,7 @@ def send_direction_values():
 
     for motor_values in payload:
         print_verbose(f"Sending: {motor_values}")
-        hardware.uart.write(bytes(motor_values))
+        hardware.write_to_frontend(bytes(motor_values))
         time.sleep(0.02)
 
 def recieve_direction_values(data):
@@ -114,9 +121,12 @@ def reset_error():
 # === MAIN PROGRAM ===
 verbose = True
 print_verbose("Starting initialization")
-
+machine.freq(200000000)
 direction_values_path = "directionValues.json"
-direction_values = read_json_file(direction_values_path)
+dynamic_throttle_path = "dynamic_throttle_data.json"
+direction_values_data = read_json_file(direction_values_path)
+dynamic_throttle_data = read_json_file(dynamic_throttle_path)
+
 
 state = 0
 cycle_time = 20  # 20ms loop
@@ -130,7 +140,7 @@ except Exception as e:
     gyro = None
     print_verbose(f"Gyro init failed: {e}")
 
-calculator = Calculator(direction_values, gyro)
+calculator = Calculator(direction_values_data, dynamic_throttle_data,gyro)
 
 last_send_address = 0x00
 last_execution_time_1000ms = time.ticks_ms()
@@ -165,7 +175,9 @@ while True:
                 elif command == 0xE0:
                     apply_manual_control(data)
                 elif command == 0xD0:
-                    apply_controller_values(data)
+                    apply_controller_values(data, False)
+                elif command == 0xC0:
+                    apply_controller_values(data, True)
                 elif command == 0x10:
                     send_direction_values()
                 elif command == 0x21:
