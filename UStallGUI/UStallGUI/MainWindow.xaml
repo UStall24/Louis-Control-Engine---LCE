@@ -9,16 +9,15 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
-            <ColumnDefinition />
             <ColumnDefinition Width="400" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
-            <RowDefinition Height="200" />
+            <RowDefinition Height="250" />
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
-        <view:CameraStreamView Grid.ColumnSpan="2" />
-        <TabControl Grid.Column="2">
+        <view:CameraStreamView Grid.RowSpan="2" />
+        <TabControl Grid.Column="2" Margin="0,0,8,0">
             <TabItem Header="Setup" IsSelected="True">
                 <view:SetupHandlerView />
             </TabItem>
@@ -32,24 +31,9 @@
                 <view:AccessoryBoxSetupView />
             </TabItem>
         </TabControl>
-        <GroupBox Grid.Row="1" Grid.Column="0" Header="Control Box Console" Margin="5">
+        <GroupBox Grid.Row="1" Grid.Column="1" Header="Console" Margin="5">
             <TextBlock Text="{Binding ControlBoxConsoleText}" />
         </GroupBox>
-        <GroupBox Grid.Row="1" Grid.Column="2" Header="Accessory Box Console" Margin="5">
-            <TextBlock Text="{Binding AccessoryBoxConsoleText}" />
-        </GroupBox>
-        <Grid Grid.Row="1" Grid.Column="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Viewbox Stretch="Uniform">
-                <Image Source="/ustall_logo.png" Margin="20" />
-            </Viewbox>
-            <Viewbox Stretch="Uniform" Grid.Column="1">
-                <Image Source="/andritz_logo.png" />
-            </Viewbox>
-        </Grid>
         <Grid Grid.Row="2" Grid.ColumnSpan="100">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />

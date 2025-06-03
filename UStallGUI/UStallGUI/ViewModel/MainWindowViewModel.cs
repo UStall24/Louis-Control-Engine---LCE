@@ -170,11 +170,12 @@ namespace UStallGUI.ViewModel
 
         public string AccessoryBoxConsoleText
         {
-            get => accessoryBoxConsoleText;
+            //get => accessoryBoxConsoleText;
             set
             {
-                accessoryBoxLog.Add(value);
-                Set(ref accessoryBoxConsoleText, accessoryBoxLog.CurrentText);
+                //accessoryBoxLog.Add(value);
+                //Set(ref accessoryBoxConsoleText, accessoryBoxLog.CurrentText);
+                ControlBoxConsoleText = value; // To be changed cause i removed the 2nd Console
             }
         }
 

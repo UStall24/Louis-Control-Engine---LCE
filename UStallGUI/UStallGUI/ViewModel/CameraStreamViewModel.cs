@@ -11,6 +11,7 @@ namespace UStallGUI.ViewModel
 
         private CameraStreamModel _streamModel1;
         private CameraStreamModel _streamModel2;
+        private CameraStreamModel _streamModel3;
 
         private BitmapImage _cameraFrame1;
 
@@ -28,6 +29,14 @@ namespace UStallGUI.ViewModel
             set => Set(ref _cameraFrame2, value);
         }
 
+        private BitmapImage _cameraFrame3;
+
+        public BitmapImage CameraFrame3
+        {
+            get => _cameraFrame3;
+            set => Set(ref _cameraFrame3, value);
+        }
+
         public CameraStreamViewModel()
         {
             StartStream_Command = new RelayCommand(StartStream);
@@ -40,12 +49,16 @@ namespace UStallGUI.ViewModel
 
             _streamModel2 = new CameraStreamModel("http://192.168.0.3:8084");
             _streamModel2.FrameReady += (frame) => CameraFrame2 = frame;
+
+            _streamModel3 = new CameraStreamModel("http://192.168.0.3:8086");
+            _streamModel3.FrameReady += (frame) => CameraFrame3 = frame;
         }
 
         public void Cleanup()
         {
             _streamModel1?.Dispose();
             _streamModel2?.Dispose();
+            _streamModel3?.Dispose();
         }
     }
 }
