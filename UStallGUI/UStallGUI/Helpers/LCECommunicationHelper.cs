@@ -66,6 +66,7 @@ namespace UStallGUI.Helpers
         ResetError = 0xF6,
         ApplyManualControl = 0xE0,
         ApplyControllerValues = 0xD0,
+        ApplyControllerValues_DynamicThrottle = 0xC0,
         PullDirectionValues = 0x10,
         ApplyDirectionValues = 0x21,
         PullPidValues = 0x30,

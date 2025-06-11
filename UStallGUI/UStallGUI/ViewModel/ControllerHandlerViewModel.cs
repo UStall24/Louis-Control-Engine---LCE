@@ -2,7 +2,6 @@
 using GalaSoft.MvvmLight.Command;
 using SharpDX.XInput;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
@@ -12,8 +11,9 @@ namespace UStallGUI.ViewModel
     public class ControllerHandlerViewModel : ObservableObject
     {
         public static ControllerHandlerViewModel Instance;
+        public static bool SendControllerValues = false;
 
-        public static bool sendControllerValues = false;
+        public static bool UseDynamicThrottle = false;
 
         private readonly int pollingFrequency = 200;
         private readonly int sendingDividor = 10;
@@ -43,20 +43,31 @@ namespace UStallGUI.ViewModel
         private async Task ControllerTimerCallback()
         {
             keepPolling = true;
-            int delayMs = (pollingFrequency > 0) ? (1000 / pollingFrequency) : 10; // Avoid division by zero
+            int delayMs = pollingFrequency > 0 ? 1000 / pollingFrequency : 10;
             int dividorCounter = 0;
+
             try
             {
                 while (keepPolling)
                 {
                     CurrentControllerModel.UpdateControllerValues();
+
                     if (dividorCounter == 0)
                     {
-                        if (sendControllerValues) SerialPortHandler.Instance?.WriteBytes(LCE_CommandAddresses.ApplyControllerValues, CurrentControllerModel.GetMovementBytes());
-                        Console.WriteLine($"{sendControllerValues}: {CurrentControllerModel.GetMovementBytesAsString()}");
+                        var command = UseDynamicThrottle
+                            ? LCE_CommandAddresses.ApplyControllerValues_DynamicThrottle
+                            : LCE_CommandAddresses.ApplyControllerValues;
+
+                        if (SendControllerValues)
+                            SerialPortHandler.Instance?.WriteBytes(command, CurrentControllerModel.GetMovementBytes());
+
+                        Console.WriteLine($"Sending: {SendControllerValues} Dynamic Throttle: {UseDynamicThrottle}: {CurrentControllerModel.GetMovementBytesAsString()}");
                         dividorCounter = sendingDividor;
                     }
-                    else dividorCounter--;
+                    else
+                    {
+                        dividorCounter--;
+                    }
 
                     RaisePropertyChanged(nameof(CurrentControllerModel));
                     await Task.Delay(delayMs);

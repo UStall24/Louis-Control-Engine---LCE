@@ -13,11 +13,11 @@
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition />
-            <RowDefinition Height="200" />
+            <RowDefinition Height="250" />
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
-        <view:CameraStreamView />
-        <TabControl Grid.Column="1">
+        <view:CameraStreamView Grid.RowSpan="2" />
+        <TabControl Grid.Column="2" Margin="0,0,8,0">
             <TabItem Header="Setup" IsSelected="True">
                 <view:SetupHandlerView />
             </TabItem>
@@ -31,14 +31,15 @@
                 <view:AccessoryBoxSetupView />
             </TabItem>
         </TabControl>
-        <GroupBox Grid.Row="1" Grid.Column="0" Header="Control Box Console" Margin="5">
+        <GroupBox Grid.Row="1" Grid.Column="1" Header="Console" Margin="5">
             <TextBlock Text="{Binding ControlBoxConsoleText}" />
         </GroupBox>
-        <GroupBox Grid.Row="1" Grid.Column="1" Header="Accessory Box Console" Margin="5">
-            <TextBlock Text="{Binding AccessoryBoxConsoleText}" />
-        </GroupBox>
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Grid.ColumnSpan="100">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -49,6 +50,10 @@
             <Label Grid.Column="1" Content="{Binding ConnectionStatusLCE}" FontSize="8" />
             <Label Content="Controller Connected: " FontSize="8" Grid.Column="2" />
             <Label Content="{Binding ConnectionStatusController}" FontSize="8" Grid.Column="3" />
+            <Label Content="Selected Gripper: " FontSize="8" Grid.Column="4" />
+            <Label Content="{Binding SelectedGripper}" FontSize="8" Grid.Column="5" />
+            <Label Content="RPi 5 CPU Temperature: " FontSize="8" Grid.Column="6" />
+            <Label Content="{Binding RPiTemperature}" FontSize="8" Grid.Column="7" />
         </Grid>
     </Grid>
 </Window>

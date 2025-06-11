@@ -31,9 +31,11 @@
                 <Button Grid.Column="2" Content="Connect" Margin="10,5" Grid.RowSpan="2" Command="{Binding ConnectMqtt_Command}" />
             </Grid>
         </GroupBox>
-        <GroupBox Margin="5" Header="Gripper 1" Grid.Row="1">
+        <GroupBox Margin="5" Header="1+2 - Simple Gripper" Grid.Row="1">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
                 </Grid.RowDefinitions>
@@ -71,13 +73,28 @@
                 <Label Grid.Row="1" Grid.Column="1" Content="{Binding GripperModel.A1M1}" />
                 <Label Grid.Row="1" Grid.Column="2" Content="Servo 2 Angle: " />
                 <Label Grid.Row="1" Grid.Column="3" Content="{Binding GripperModel.A1M2}" />
+                <Button Grid.Column="0" Grid.Row="2"
+                        Content="Servo 3 +"
+                        Margin="10,5"
+                        Command="{Binding GripperCommand}"
+                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo3Plus}" />
+
+                <Button Grid.Column="1" Grid.Row="2"
+                        Content="Servo 3 -"
+                        Margin="10,5"
+                        Command="{Binding GripperCommand}"
+                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo3Minus}" />
+                <Label Grid.Row="3" Content="Servo 3 Angle: " />
+                <Label Grid.Row="3" Grid.Column="1" Content="{Binding GripperModel.A1M3}" />
             </Grid>
         </GroupBox>
-        <GroupBox Margin="5" Header="Gripper 2" Grid.Row="2">
+        <GroupBox Margin="5" Header="3 - Pump Gripper" Grid.Row="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
@@ -87,32 +104,40 @@
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="0"
-                        Content="Servo 1 +"
-                        Margin="10,5"
-                        Command="{Binding GripperCommand}"
-                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo1Plus}" />
+                Content="Servo 1 +"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo1Plus}" />
 
                 <Button Grid.Column="1"
-                        Content="Servo 1 -"
-                        Margin="10,5"
-                        Command="{Binding GripperCommand}"
-                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo1Minus}" />
+                Content="Servo 1 -"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo1Minus}" />
 
                 <Button Grid.Column="2"
-                        Content="Servo 2 +"
-                        Margin="10,5"
-                        Command="{Binding GripperCommand}"
-                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo2Plus}" />
+                Content="Servo 2 +"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo2Plus}" />
 
                 <Button Grid.Column="3"
-                        Content="Servo 2 -"
-                        Margin="10,5"
-                        Command="{Binding GripperCommand}"
-                        CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo2Minus}" />
-                <Label Grid.Row="1" Content="Servo 1 Angle: " />
-                <Label Grid.Row="1" Grid.Column="1" Content="{Binding GripperModel.A2M1}" />
-                <Label Grid.Row="1" Grid.Column="2" Content="Servo 2 Angle: " />
-                <Label Grid.Row="1" Grid.Column="3" Content="{Binding GripperModel.A2M2}" />
+                Content="Servo 2 -"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_Servo2Minus}" />
+
+                <Button Grid.Column="0" Grid.Row="2"
+                Content="Pump on"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_PumpOn}" />
+
+                <Button Grid.Column="2" Grid.Row="2" Grid.ColumnSpan="2"
+                Content="Default position"
+                Margin="10,5"
+                Command="{Binding GripperCommand}"
+                CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper2_DefaultPosition}" />
             </Grid>
         </GroupBox>
         <GroupBox Grid.Row="3" Header="Additional Info" Margin="5">

@@ -40,7 +40,6 @@ namespace UStallGUI.ViewModel
             }
         }
 
-
         private readonly string[] lce_connection_messages = { "No active connection", "Connecting...", "Connected", "Error Connecting", "Closing Successful", "Closing Failed" };
 
         private int lce_connection_index = 0;
@@ -66,7 +65,6 @@ namespace UStallGUI.ViewModel
             SetupVM.ManualControlValues.HM2,
             SetupVM.ManualControlValues.HM3
         };
-
 
         private float _motorV1 = 0;
         private float _motorV2 = 0;
@@ -157,6 +155,7 @@ namespace UStallGUI.ViewModel
         private readonly ConsoleLog accessoryBoxLog = new();
 
         private string controlBoxConsoleText;
+
         public string ControlBoxConsoleText
         {
             get => controlBoxConsoleText;
@@ -168,16 +167,22 @@ namespace UStallGUI.ViewModel
         }
 
         private string accessoryBoxConsoleText;
+
         public string AccessoryBoxConsoleText
         {
-            get => accessoryBoxConsoleText;
+            //get => accessoryBoxConsoleText;
             set
             {
-                accessoryBoxLog.Add(value);
-                Set(ref accessoryBoxConsoleText, accessoryBoxLog.CurrentText);
+                //accessoryBoxLog.Add(value);
+                //Set(ref accessoryBoxConsoleText, accessoryBoxLog.CurrentText);
+                ControlBoxConsoleText = value; // To be changed cause i removed the 2nd Console
             }
         }
 
+        private string _selectedGripper = "0";
+        public string SelectedGripper { get => _selectedGripper; set => Set(ref _selectedGripper, value); }
+        private string _rpiTemperature;
+        public string RPiTemperature { get => _rpiTemperature; set => Set(ref _rpiTemperature, value); }
 
         // Textfield for the Statusbar Bindings
         public string ConnectionStatusLCE

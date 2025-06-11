@@ -14,41 +14,32 @@ namespace UStallGUI.Helpers
         private readonly IMqttClient _mqttClient;
         private readonly MqttClientOptions _mqttOptions;
         private readonly GripperModel _gripperModel;
-        private readonly string _topic;
-        public bool IsConnected { get => _mqttClient?.IsConnected == true;}
+        private readonly string _simple_gripper_topic = "greifer/values";
+        private readonly string _mechpro_gripper_topic = "gamepad/input";
+        public bool IsConnected { get => _mqttClient?.IsConnected == true; }
 
-        public MqttGripperSender(string brokerAddress, int port, string topic, GripperModel gripperModel)
+        public MqttGripperSender(IMqttClient mqttClient, GripperModel gripperModel)
         {
+            _mqttClient = mqttClient;
             _gripperModel = gripperModel;
-            _topic = topic;
-
-            var factory = new MqttFactory();
-            _mqttClient = factory.CreateMqttClient();
-
-            _mqttOptions = new MqttClientOptionsBuilder()
-                .WithClientId("GripperSenderClient")
-                .WithTcpServer(brokerAddress, port)
-                .WithCleanSession()
-                .Build();
         }
 
-        public async Task<bool> StartAsync()
+        public async Task SendMechProGripperValues(string payload)
         {
-            try
-            {
-                if (!_mqttClient.IsConnected)
-                {
-                    await _mqttClient.ConnectAsync(_mqttOptions);
-                }
-                return _mqttClient.IsConnected;
-            }
-            catch(Exception)
-            {
-                return false;
-            }
+            if (!_mqttClient.IsConnected)
+                return;
+
+            var message = new MqttApplicationMessageBuilder()
+                .WithTopic(_mechpro_gripper_topic)
+                .WithPayload(payload)
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithRetainFlag(false)
+                .Build();
+
+            await _mqttClient.PublishAsync(message);
         }
 
-        public async Task SendGripperValues()
+        public async Task SendSimpleGripperValues()
         {
             if (!_mqttClient.IsConnected)
                 return;
@@ -64,7 +55,7 @@ namespace UStallGUI.Helpers
             string jsonPayload = JsonSerializer.Serialize(payload);
 
             var message = new MqttApplicationMessageBuilder()
-                .WithTopic(_topic)
+                .WithTopic(_simple_gripper_topic)
                 .WithPayload(jsonPayload)
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .WithRetainFlag(false)

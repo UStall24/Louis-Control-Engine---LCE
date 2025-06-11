@@ -11,7 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="andritz_logo.png" />
     <None Remove="ROV_Model.png" />
+    <None Remove="ustall_logo.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +32,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="andritz_logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="ROV_Model.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="ustall_logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>
