@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:local="clr-namespace:UStallGUI.View" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:AccessoryBoxViewModel}"
              mc:Ignorable="d"
              d:DesignHeight="800" d:DesignWidth="400" Background="White">
@@ -39,6 +40,10 @@
                     <RowDefinition />
                     <RowDefinition />
                     <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition />
@@ -47,46 +52,121 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="0"
+                <Label Content="S1 Lo Limit" />
+                <Label Content="S1 Hi Limit" Grid.Column="1" />
+                <xctk:IntegerUpDown
+                    Grid.Row="1"
+                    Minimum="0"
+                    Maximum="{Binding GripperModel.G1S1.HigherLimit}"
+                    Value="{Binding GripperModel.G1S1.LowerLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+                <xctk:IntegerUpDown
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Minimum="{Binding GripperModel.G1S1.LowerLimit}"
+                    Maximum="100"
+                    Value="{Binding GripperModel.G1S1.HigherLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+
+                <Label Content="S2 Lo Limit" Grid.Column="2" />
+                <Label Content="S2 Hi Limit" Grid.Column="3" />
+                <xctk:IntegerUpDown
+                    Grid.Column="2"
+                    Grid.Row="1"
+                    Minimum="0"
+                    Maximum="{Binding GripperModel.G1S2.HigherLimit}"
+                    Value="{Binding GripperModel.G1S2.LowerLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+                <xctk:IntegerUpDown
+                    Grid.Row="1"
+                    Grid.Column="3"
+                    Minimum="{Binding GripperModel.G1S2.LowerLimit}"
+                    Maximum="100"
+                    Value="{Binding GripperModel.G1S2.HigherLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+
+                <Label Content="S3 Lo Limit" Grid.Column="0" Grid.Row="4" />
+                <Label Content="S3 Hi Limit" Grid.Column="1" Grid.Row="4" />
+                <xctk:IntegerUpDown
+                    Grid.Column="0"
+                    Grid.Row="5"
+                    Minimum="0"
+                    Maximum="{Binding GripperModel.G1S3.HigherLimit}"
+                    Value="{Binding GripperModel.G1S3.LowerLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+                <xctk:IntegerUpDown
+                    Grid.Row="5"
+                    Grid.Column="1"
+                    Minimum="{Binding GripperModel.G1S3.LowerLimit}"
+                    Maximum="100"
+                    Value="{Binding GripperModel.G1S3.HigherLimit, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
+
+                <Button Grid.Row="2"  Grid.Column="0"
                         Content="Servo 1 +"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo1Plus}" />
 
-                <Button Grid.Column="1"
+                <Button Grid.Row="2" Grid.Column="1"
                         Content="Servo 1 -"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo1Minus}" />
 
-                <Button Grid.Column="2"
+                <Button Grid.Row="2" Grid.Column="2"
                         Content="Servo 2 +"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo2Plus}" />
 
-                <Button Grid.Column="3"
+                <Button Grid.Row="2" Grid.Column="3"
                         Content="Servo 2 -"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo2Minus}" />
-                <Label Grid.Row="1" Content="Servo 1 Angle: " />
-                <Label Grid.Row="1" Grid.Column="1" Content="{Binding GripperModel.A1M1}" />
-                <Label Grid.Row="1" Grid.Column="2" Content="Servo 2 Angle: " />
-                <Label Grid.Row="1" Grid.Column="3" Content="{Binding GripperModel.A1M2}" />
-                <Button Grid.Column="0" Grid.Row="2"
+                <Label Grid.Row="3" Content="Servo 1 Angle: " />
+                <Label Grid.Row="3" Grid.Column="1" Content="{Binding GripperModel.G1S1.CurrentValue}" />
+                <Label Grid.Row="3" Grid.Column="2" Content="Servo 2 Angle: " />
+                <Label Grid.Row="3" Grid.Column="3" Content="{Binding GripperModel.G1S2.CurrentValue}" />
+                <Button Grid.Column="0" Grid.Row="6"
                         Content="Servo 3 +"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo3Plus}" />
 
-                <Button Grid.Column="1" Grid.Row="2"
+                <Button Grid.Column="1" Grid.Row="6"
                         Content="Servo 3 -"
                         Margin="10,5"
                         Command="{Binding GripperCommand}"
                         CommandParameter="{x:Static viewmodel:GripperAssignment.Gripper1_Servo3Minus}" />
-                <Label Grid.Row="3" Content="Servo 3 Angle: " />
-                <Label Grid.Row="3" Grid.Column="1" Content="{Binding GripperModel.A1M3}" />
+                <Label Grid.Row="7" Content="Servo 3 Angle: " />
+                <Label Grid.Row="7" Grid.Column="1" Content="{Binding GripperModel.G1S3.CurrentValue}" />
+
+                <Label Content="Step Size:" Grid.Row="5" Grid.Column="2" Grid.ColumnSpan="2" HorizontalAlignment="Center" />
+                <xctk:IntegerUpDown
+                    Grid.Row="6"
+                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
+                    Minimum="1"
+                    Maximum="100"
+                    Width="80"
+                    Value="{Binding StepSize, Mode=TwoWay}"
+                    Increment="1"
+                    HorizontalAlignment="Stretch"
+                    Margin="5" />
             </Grid>
         </GroupBox>
         <GroupBox Margin="5" Header="3 - Pump Gripper" Grid.Row="2">

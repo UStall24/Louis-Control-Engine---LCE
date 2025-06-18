@@ -67,7 +67,7 @@ namespace UStallGUI.ViewModel
 
         public RelayCommand<GripperAssignment> GripperCommand { get; set; }
 
-        public void ExecuteGripperCommand(GripperAssignment assignment) => ExecuteGripperCommand(assignment, 5);
+        public void ExecuteGripperCommand(GripperAssignment assignment) => ExecuteGripperCommand(assignment, StepSize);
 
         private void ExecuteGripperCommand(GripperAssignment assignment, int step)
         {
@@ -77,27 +77,27 @@ namespace UStallGUI.ViewModel
                 switch (assignment)
                 {
                     case GripperAssignment.Gripper1_Servo1Plus:
-                        GripperModel.A1M1 += step;
+                        GripperModel.G1S1.CurrentValue += step;
                         break;
 
                     case GripperAssignment.Gripper1_Servo1Minus:
-                        GripperModel.A1M1 -= step;
+                        GripperModel.G1S1.CurrentValue -= step;
                         break;
 
                     case GripperAssignment.Gripper1_Servo2Plus:
-                        GripperModel.A1M2 += step;
+                        GripperModel.G1S2.CurrentValue += step;
                         break;
 
                     case GripperAssignment.Gripper1_Servo2Minus:
-                        GripperModel.A1M2 -= step;
+                        GripperModel.G1S2.CurrentValue -= step;
                         break;
 
                     case GripperAssignment.Gripper1_Servo3Plus:
-                        GripperModel.A1M3 += step;
+                        GripperModel.G1S3.CurrentValue += step;
                         break;
 
                     case GripperAssignment.Gripper1_Servo3Minus:
-                        GripperModel.A1M3 -= step;
+                        GripperModel.G1S3.CurrentValue -= step;
                         break;
 
                     default:
@@ -106,6 +106,7 @@ namespace UStallGUI.ViewModel
                         break;
                 }
                 if (!mechpro_gripper_execution && !_debug_mode) _ = _mqttSender.SendSimpleGripperValues();
+                if (_debug_mode) Console.WriteLine(GripperModel);
             }
             else MainWindowViewModel.Instance.AccessoryBoxConsoleText = "Connect to Accessory Box first";
         }
@@ -278,6 +279,13 @@ namespace UStallGUI.ViewModel
 
             return Task.CompletedTask;
         }
+
+        #region Simple Gripper (G1)
+
+        private int _stepSize = 5;
+        public int StepSize { get => _stepSize; set => Set(ref _stepSize, value); }
+
+        #endregion Simple Gripper (G1)
     }
 
     public enum GripperAssignment

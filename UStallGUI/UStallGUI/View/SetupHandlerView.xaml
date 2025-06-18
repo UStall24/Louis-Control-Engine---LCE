@@ -47,7 +47,7 @@
                 <Button Grid.Row="4" Grid.Column="1" Margin="5" Content="Reset" Command="{Binding ResetErrorLCE_Command}" />
             </Grid>
         </GroupBox>
-        <GroupBox Grid.Row="2" Margin="5" Header="Manual Control">
+        <!--<GroupBox Grid.Row="2" Margin="5" Header="Manual Control" IsEnabled="False">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -86,7 +86,10 @@
 
                 <Button Content="Reset" Grid.Row="3" Grid.ColumnSpan="6" VerticalAlignment="Center" HorizontalAlignment="Center" Width="200" Command="{Binding ManualControlReset_Command}" />
             </Grid>
+        </GroupBox>-->
+        <GroupBox Grid.Row="2" Margin="5" Header="Manual Control" IsEnabled="False">
         </GroupBox>
+
         <GroupBox Grid.Row="1" Margin="5,0" Header="Gyro">
             <Grid>
                 <Grid.ColumnDefinitions>
