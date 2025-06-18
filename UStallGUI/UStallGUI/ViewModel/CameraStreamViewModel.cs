@@ -50,7 +50,7 @@ namespace UStallGUI.ViewModel
             _streamModel2 = new CameraStreamModel("http://192.168.0.3:8084");
             _streamModel2.FrameReady += (frame) => CameraFrame2 = frame;
 
-            _streamModel3 = new CameraStreamModel("http://192.168.0.3:8086");
+            _streamModel3 = new CameraStreamModel("http://192.168.0.3:8083");
             _streamModel3.FrameReady += (frame) => CameraFrame3 = frame;
         }
 

@@ -1,6 +1,5 @@
 ﻿using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 using System.Timers;

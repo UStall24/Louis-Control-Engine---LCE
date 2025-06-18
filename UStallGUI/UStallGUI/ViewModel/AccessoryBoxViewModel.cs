@@ -4,12 +4,8 @@ using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Server;
 using System;
-using System.Data;
-using System.Diagnostics;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using UStallGUI.Helpers;
 using UStallGUI.Model;
 using Timer = System.Threading.Timer;
@@ -18,11 +14,15 @@ namespace UStallGUI.ViewModel
 {
     public class AccessoryBoxViewModel : ObservableObject
     {
+        private bool _debug_mode = true;
+
         private IMqttClient mqttClient;
         private MqttClientOptions mqttClientOptions;
         public GripperModel GripperModel { get; set; } = new();
 
         private int _mqtt_port;
+
+        public static AccessoryBoxViewModel Instance;
 
         public int MqttPort
         {
@@ -60,17 +60,18 @@ namespace UStallGUI.ViewModel
 
         public AccessoryBoxViewModel()
         {
+            Instance = this;
             GripperCommand = new RelayCommand<GripperAssignment>(ExecuteGripperCommand);
             ConnectMqtt_Command = new RelayCommand(ConnectMqtt);
         }
 
         public RelayCommand<GripperAssignment> GripperCommand { get; set; }
 
-        private void ExecuteGripperCommand(GripperAssignment assignment) => ExecuteGripperCommand(assignment, 10);
+        public void ExecuteGripperCommand(GripperAssignment assignment) => ExecuteGripperCommand(assignment, 5);
 
         private void ExecuteGripperCommand(GripperAssignment assignment, int step)
         {
-            if (_mqttSender != null && _mqttSender.IsConnected)
+            if ((_mqttSender != null && _mqttSender.IsConnected) || _debug_mode)
             {
                 bool mechpro_gripper_execution = false;
                 switch (assignment)
@@ -100,11 +101,11 @@ namespace UStallGUI.ViewModel
                         break;
 
                     default:
-                        _mqttSender.SendMechProGripperValues(GripperModel.MechproGripperExecuteMessage(assignment));
+                        if (!_debug_mode) _mqttSender.SendMechProGripperValues(GripperModel.MechproGripperExecuteMessage(assignment));
                         mechpro_gripper_execution = true;
                         break;
                 }
-                if (!mechpro_gripper_execution) _ = _mqttSender.SendSimpleGripperValues();
+                if (!mechpro_gripper_execution && !_debug_mode) _ = _mqttSender.SendSimpleGripperValues();
             }
             else MainWindowViewModel.Instance.AccessoryBoxConsoleText = "Connect to Accessory Box first";
         }

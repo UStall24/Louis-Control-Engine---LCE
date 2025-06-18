@@ -5,7 +5,55 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UStallGUI" xmlns:viewmodel="clr-namespace:UStallGUI.ViewModel" xmlns:view="clr-namespace:UStallGUI.View" d:DataContext="{d:DesignInstance Type=viewmodel:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="850" Width="1200">
+        Title="MainWindow"
+        Height="850" Width="1200">
+
+    <Window.InputBindings>
+        <KeyBinding Key="T"
+                    Command="{Binding KeyPressedCommand}"
+                    CommandParameter="T">
+        </KeyBinding>
+        <KeyBinding Key="G"
+                    Command="{Binding KeyPressedCommand}"
+                    CommandParameter="G">
+        </KeyBinding>
+        <KeyBinding Key="Z"
+                    Command="{Binding KeyPressedCommand}"
+                    CommandParameter="Z">
+        </KeyBinding>
+        <KeyBinding Key="H"
+                    Command="{Binding KeyPressedCommand}"
+                    CommandParameter="H">
+        </KeyBinding>
+        <KeyBinding Key="U"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="U">
+        </KeyBinding>
+        <KeyBinding Key="J"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="J">
+        </KeyBinding>
+        <KeyBinding Key="I"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="I">
+        </KeyBinding>
+        <KeyBinding Key="K"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="K">
+        </KeyBinding>
+        <KeyBinding Key="O"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="O">
+        </KeyBinding>
+        <KeyBinding Key="L"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="L">
+        </KeyBinding>
+        <KeyBinding Key="B"
+            Command="{Binding KeyPressedCommand}"
+            CommandParameter="B">
+        </KeyBinding>
+    </Window.InputBindings>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
